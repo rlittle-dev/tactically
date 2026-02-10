@@ -80,8 +80,7 @@ const InsightsPanel = ({ stats, games, username }: Props) => {
 
   return (
     <div className="space-y-4 opacity-0 animate-fade-in" style={{ animationDelay: "500ms" }}>
-      {/* Section title */}
-      <h3 className="text-2xl font-display italic font-semibold text-foreground">
+      <h3 className="text-xs uppercase tracking-[0.15em] text-muted-foreground">
         Profile Breakdown
       </h3>
 

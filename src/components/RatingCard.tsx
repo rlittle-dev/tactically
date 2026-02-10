@@ -21,56 +21,46 @@ const RatingCard = ({ label, icon, stats, delay = 0 }: Props) => {
       style={{ animationDelay: `${delay}ms` }}
     >
       <div className="flex items-center gap-3 mb-4">
-        <div className="p-2 rounded-sm bg-foreground/5 text-foreground">{icon}</div>
+        <div className="p-2 rounded-sm bg-foreground/5 text-foreground/60">{icon}</div>
         <div>
-          <h3 className="text-xs font-display italic text-muted-foreground tracking-wide">{label}</h3>
-          <p className="text-2xl font-bold text-foreground font-mono">{last.rating}</p>
+          <h3 className="text-xs uppercase tracking-[0.15em] text-muted-foreground">{label}</h3>
+          <p className="text-3xl font-display italic font-light text-foreground">{last.rating}</p>
         </div>
       </div>
 
       <div className="space-y-2 text-sm">
-        <div className="flex justify-between">
-          <span className="text-muted-foreground flex items-center gap-1">
+        <div className="flex justify-between items-center">
+          <span className="text-muted-foreground flex items-center gap-1.5">
             <Trophy className="h-3.5 w-3.5" /> Best
           </span>
-          <span className="font-mono text-primary">{best.rating}</span>
+          <span className="font-display italic text-foreground">{best.rating}</span>
         </div>
-        <div className="flex justify-between">
-          <span className="text-muted-foreground flex items-center gap-1">
+        <div className="flex justify-between items-center">
+          <span className="text-muted-foreground flex items-center gap-1.5">
             <TrendingUp className="h-3.5 w-3.5 text-success" /> Wins
           </span>
-          <span className="font-mono text-success">{record.win}</span>
+          <span className="text-success">{record.win.toLocaleString()}</span>
         </div>
-        <div className="flex justify-between">
-          <span className="text-muted-foreground flex items-center gap-1">
+        <div className="flex justify-between items-center">
+          <span className="text-muted-foreground flex items-center gap-1.5">
             <TrendingDown className="h-3.5 w-3.5 text-destructive" /> Losses
           </span>
-          <span className="font-mono text-destructive">{record.loss}</span>
+          <span className="text-destructive">{record.loss.toLocaleString()}</span>
         </div>
-        <div className="flex justify-between">
+        <div className="flex justify-between items-center">
           <span className="text-muted-foreground">Draws</span>
-          <span className="font-mono text-chart-draw">{record.draw}</span>
+          <span className="text-muted-foreground">{record.draw.toLocaleString()}</span>
         </div>
 
-        <div className="pt-2 border-t border-border">
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Win Rate</span>
-            <span className="font-mono font-semibold text-foreground">{winRate}%</span>
+        <div className="pt-3 border-t border-border">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-muted-foreground text-xs uppercase tracking-wider">Win Rate</span>
+            <span className="font-display italic text-lg text-foreground">{winRate}%</span>
           </div>
-          {/* Win/Loss bar */}
-          <div className="mt-2 h-2 rounded-full bg-muted overflow-hidden flex">
-            <div
-              className="h-full bg-success rounded-l-full"
-              style={{ width: `${(record.win / total) * 100}%` }}
-            />
-            <div
-              className="h-full bg-chart-draw"
-              style={{ width: `${(record.draw / total) * 100}%` }}
-            />
-            <div
-              className="h-full bg-destructive rounded-r-full"
-              style={{ width: `${(record.loss / total) * 100}%` }}
-            />
+          <div className="h-1.5 rounded-full bg-muted overflow-hidden flex">
+            <div className="h-full bg-success" style={{ width: `${(record.win / total) * 100}%` }} />
+            <div className="h-full bg-muted-foreground/30" style={{ width: `${(record.draw / total) * 100}%` }} />
+            <div className="h-full bg-destructive" style={{ width: `${(record.loss / total) * 100}%` }} />
           </div>
         </div>
       </div>
