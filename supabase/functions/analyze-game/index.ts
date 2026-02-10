@@ -21,12 +21,18 @@ serve(async (req) => {
       });
     }
 
+    // Build context - handle both full game data and raw PGN uploads
+    const hasMetadata = username && opponent;
+    const playerContext = hasMetadata
+      ? `PLAYER: ${username} (${playerRating})\nOPPONENT: ${opponent} (${opponentRating})\nTIME CONTROL: ${timeClass}\nRESULT: ${result}`
+      : "This is an uploaded PGN. Extract player names, ratings, and result from the PGN headers if available.";
+
     const prompt = `You are an expert chess coach performing a detailed post-game analysis. Analyze this specific game and provide actionable feedback.
 
-PLAYER: ${username} (${playerRating})
-OPPONENT: ${opponent} (${opponentRating})
-TIME CONTROL: ${timeClass}
-RESULT: ${result}
+${playerContext}
+
+PGN:
+${pgn}
 
 PGN:
 ${pgn}

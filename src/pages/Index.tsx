@@ -8,6 +8,7 @@ import PuzzleCard from "@/components/PuzzleCard";
 import RecentGames from "@/components/RecentGames";
 import RatingChart from "@/components/RatingChart";
 import InsightsPanel from "@/components/InsightsPanel";
+import PgnUpload from "@/components/PgnUpload";
 import {
   ChessProfile, ChessStats, RecentGame,
   fetchProfile, fetchStats, fetchRecentGames,
@@ -154,6 +155,11 @@ const Index = () => {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="space-y-10 mb-12"
             >
+              {/* PGN Upload */}
+              <div className="max-w-lg mx-auto">
+                <PgnUpload />
+              </div>
+
               {/* Sample Players */}
               <div className="text-center space-y-3">
                 <p className="text-xs tracking-[0.15em] uppercase text-muted-foreground">Try a sample player</p>

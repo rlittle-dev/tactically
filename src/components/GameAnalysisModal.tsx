@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronRight, Target, CheckCircle2, AlertTriangle, BookOpen, Loader2, ExternalLink } from "lucide-react";
 import { RecentGame, getResult, getOpponentName, getOpponentRating, getPlayerRating } from "@/lib/chess-api";
@@ -33,11 +33,21 @@ interface GameAnalysis {
   opening_name?: string;
 }
 
-interface Props {
+interface GameProps {
   game: RecentGame;
   username: string;
+  rawPgn?: never;
   onClose: () => void;
 }
+
+interface RawPgnProps {
+  rawPgn: string;
+  game?: never;
+  username?: never;
+  onClose: () => void;
+}
+
+type Props = GameProps | RawPgnProps;
 
 const phaseAssessmentConfig = {
   good: { color: "text-success", bg: "bg-success/10", icon: <CheckCircle2 className="h-4 w-4" /> },
@@ -51,30 +61,60 @@ const priorityColors = {
   low: "border-muted-foreground/40 text-muted-foreground",
 };
 
-const GameAnalysisModal = ({ game, username, onClose }: Props) => {
+function extractPgnHeader(pgn: string, header: string): string | null {
+  const match = pgn.match(new RegExp(`\\[${header}\\s+"([^"]*)"\\]`));
+  return match ? match[1] : null;
+}
+
+const GameAnalysisModal = (props: Props) => {
+  const { onClose } = props;
   const [analysis, setAnalysis] = useState<GameAnalysis | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const result = getResult(game, username);
-  const opponent = getOpponentName(game, username);
-  const oppRating = getOpponentRating(game, username);
-  const myRating = getPlayerRating(game, username);
+  const isRawPgn = "rawPgn" in props && !!props.rawPgn;
 
-  useState(() => {
+  // Derive display info
+  const pgn = isRawPgn ? props.rawPgn : props.game?.pgn;
+  const gameUrl = isRawPgn ? null : props.game?.url;
+
+  let displayTitle: string;
+  let displaySubtitle: string;
+  let resultBadge: string | null = null;
+
+  if (isRawPgn) {
+    const white = extractPgnHeader(props.rawPgn, "White") || "White";
+    const black = extractPgnHeader(props.rawPgn, "Black") || "Black";
+    const pgnResult = extractPgnHeader(props.rawPgn, "Result") || "";
+    displayTitle = `${white} vs ${black}`;
+    displaySubtitle = extractPgnHeader(props.rawPgn, "Event") || "Uploaded Game";
+    resultBadge = pgnResult;
+  } else {
+    const result = getResult(props.game, props.username);
+    const opponent = getOpponentName(props.game, props.username);
+    const oppRating = getOpponentRating(props.game, props.username);
+    const myRating = getPlayerRating(props.game, props.username);
+    displayTitle = `${props.username} (${myRating}) vs ${opponent} (${oppRating})`;
+    displaySubtitle = props.game.time_class;
+    resultBadge = result.toUpperCase();
+  }
+
+  useEffect(() => {
     const analyze = async () => {
       try {
-        const { data, error: fnError } = await supabase.functions.invoke("analyze-game", {
-          body: {
-            pgn: game.pgn,
-            username,
-            opponent,
-            result,
-            timeClass: game.time_class,
-            playerRating: myRating,
-            opponentRating: oppRating,
-          },
-        });
+        const body: Record<string, any> = { pgn };
+
+        if (!isRawPgn) {
+          const result = getResult(props.game, props.username);
+          body.username = props.username;
+          body.opponent = getOpponentName(props.game, props.username);
+          body.result = result;
+          body.timeClass = props.game.time_class;
+          body.playerRating = getPlayerRating(props.game, props.username);
+          body.opponentRating = getOpponentRating(props.game, props.username);
+        }
+
+        const { data, error: fnError } = await supabase.functions.invoke("analyze-game", { body });
 
         if (fnError) throw new Error(fnError.message);
         if (data?.error) throw new Error(data.error);
@@ -88,7 +128,13 @@ const GameAnalysisModal = ({ game, username, onClose }: Props) => {
       }
     };
     analyze();
-  });
+  }, []);
+
+  const resultColorClass = resultBadge === "WIN" || resultBadge === "1-0"
+    ? "bg-success/10 text-success"
+    : resultBadge === "LOSS" || resultBadge === "0-1"
+    ? "bg-destructive/10 text-destructive"
+    : "bg-muted text-muted-foreground";
 
   return (
     <AnimatePresence>
@@ -112,18 +158,14 @@ const GameAnalysisModal = ({ game, username, onClose }: Props) => {
           <div className="sticky top-0 z-10 bg-card/95 backdrop-blur-xl border-b border-border p-5 flex items-center justify-between">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <span className={`text-xs font-medium px-2 py-0.5 rounded ${
-                  result === "win" ? "bg-success/10 text-success" :
-                  result === "loss" ? "bg-destructive/10 text-destructive" :
-                  "bg-muted text-muted-foreground"
-                }`}>
-                  {result.toUpperCase()}
-                </span>
-                <span className="text-xs text-muted-foreground capitalize">{game.time_class}</span>
+                {resultBadge && (
+                  <span className={`text-xs font-medium px-2 py-0.5 rounded ${resultColorClass}`}>
+                    {resultBadge}
+                  </span>
+                )}
+                <span className="text-xs text-muted-foreground capitalize">{displaySubtitle}</span>
               </div>
-              <h2 className="text-lg font-display italic text-foreground">
-                {username} ({myRating}) vs {opponent} ({oppRating})
-              </h2>
+              <h2 className="text-lg font-display italic text-foreground">{displayTitle}</h2>
             </div>
             <button onClick={onClose} className="p-2 rounded-lg hover:bg-accent transition-colors text-muted-foreground hover:text-foreground">
               <X className="h-5 w-5" />
@@ -253,18 +295,20 @@ const GameAnalysisModal = ({ game, username, onClose }: Props) => {
                 </div>
 
                 {/* View on Chess.com */}
-                <div className="pt-2 border-t border-border">
-                  <a
-                    href={game.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors py-2"
-                  >
-                    <BookOpen className="h-4 w-4" />
-                    View full game on Chess.com
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
-                </div>
+                {gameUrl && (
+                  <div className="pt-2 border-t border-border">
+                    <a
+                      href={gameUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors py-2"
+                    >
+                      <BookOpen className="h-4 w-4" />
+                      View full game on Chess.com
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                  </div>
+                )}
               </motion.div>
             )}
           </div>
