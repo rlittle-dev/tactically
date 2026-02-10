@@ -11,6 +11,10 @@ A sleek, real-time chess analytics dashboard that connects to the Chess.com API 
 - **Recent Matches** — Scrollable feed of recent games with results, opponents, and ratings
 - **Puzzle Stats** — Puzzle rating and Puzzle Rush scores at a glance
 - **AI-Powered Analysis** — Identifies strengths, weaknesses, and recommends targeted Lichess training puzzles
+- **Game-Specific Analysis** — Deep-dive into individual matches with phase breakdowns, critical mistakes, and practice recommendations
+- **PGN Upload** — Upload and analyze any PGN file directly
+- **Shareable Profile Cards** — Generate and download profile cards or copy share links (tactically.me/player/username)
+- **Support Banner** — USDT donation address with click-to-copy
 - **Fluid Animations** — Apple-inspired motion design with staggered reveals, spring physics, and glassmorphism
 
 ## Tech Stack
