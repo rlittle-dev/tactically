@@ -21,7 +21,7 @@ A sleek, real-time chess analytics dashboard that connects to the Chess.com API 
 | Styling | Tailwind CSS, Framer Motion |
 | Charts | Recharts |
 | Backend | Supabase Edge Functions |
-| AI | Gemini 3 Flash (via Lovable AI) |
+| AI | Gemini 3 Flash |
 | Data Source | Chess.com Public API |
 
 ## How It Works
