@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { Clock, Zap, Gauge, RotateCcw, Github, Linkedin, TrendingUp, Brain, History, Share2 } from "lucide-react";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import { Clock, Zap, Gauge, RotateCcw, Github, Linkedin, TrendingUp, Brain, History, Share2, FileText } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import UsernameSearch from "@/components/UsernameSearch";
 import ProfileHeader from "@/components/ProfileHeader";
@@ -288,7 +288,10 @@ const Index = () => {
               <Linkedin className="h-5 w-5" />
             </a>
           </div>
-          <span>Powered by the Chess.com Public API</span>
+          <Link to="/docs" className="flex items-center gap-1.5 hover:text-foreground transition-colors">
+            <FileText className="h-4 w-4" />
+            Documentation
+          </Link>
         </div>
       </footer>
 
