@@ -54,17 +54,28 @@ export async function fetchStats(username: string): Promise<ChessStats> {
   return res.json();
 }
 
-export async function fetchRecentGames(username: string): Promise<RecentGame[]> {
+export async function fetchRecentGames(username: string, monthsBack = 3): Promise<RecentGame[]> {
   const archiveRes = await fetch(`${BASE}/${username}/games/archives`);
   if (!archiveRes.ok) return [];
   const { archives } = await archiveRes.json();
   if (!archives || archives.length === 0) return [];
 
-  const latestUrl = archives[archives.length - 1];
-  const gamesRes = await fetch(latestUrl);
-  if (!gamesRes.ok) return [];
-  const { games } = await gamesRes.json();
-  return (games || []).slice(-10).reverse();
+  // Fetch the last N months of archives for more robust data
+  const recentArchives = archives.slice(-monthsBack);
+
+  const allGames: RecentGame[] = [];
+  const results = await Promise.allSettled(
+    recentArchives.map((url: string) => fetch(url).then((r) => r.ok ? r.json() : null))
+  );
+
+  for (const result of results) {
+    if (result.status === "fulfilled" && result.value?.games) {
+      allGames.push(...result.value.games);
+    }
+  }
+
+  // Sort by end_time descending and return all for analysis
+  return allGames.sort((a, b) => b.end_time - a.end_time);
 }
 
 export function getResult(game: RecentGame, username: string): "win" | "loss" | "draw" {

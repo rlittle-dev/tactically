@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { ChessStats, RecentGame } from "@/lib/chess-api";
 import { AIAnalysis, fetchAIAnalysis } from "@/lib/ai-analysis";
 import {
@@ -43,33 +43,28 @@ const InsightsPanel = ({ stats, games, username }: Props) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [enginePhase, setEnginePhase] = useState<{ current: number; total: number } | null>(null);
-  const [phase, setPhase] = useState<"engine" | "ai" | "done">("engine");
+  const [phase, setPhase] = useState<"idle" | "engine" | "ai" | "done">("idle");
 
-  useEffect(() => {
-    let cancelled = false;
-    const run = async () => {
-      setLoading(true);
-      setError(null);
-      setPhase("engine");
-      try {
-        const result = await fetchAIAnalysis(
-          username, stats, games,
-          (current, total) => { if (!cancelled) setEnginePhase({ current, total }); },
-          (p) => { if (!cancelled) { setPhase(p); if (p === "ai") setEnginePhase(null); } }
-        );
-        if (!cancelled) {
-          setPhase("done");
-          setAnalysis(result);
-        }
-      } catch (e: any) {
-        if (!cancelled) setError(e.message || "Analysis failed");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-    run();
-    return () => { cancelled = true; };
-  }, [username, stats, games]);
+  const gamesWithPgn = games.filter((g) => g.pgn);
+
+  const startAnalysis = async () => {
+    setLoading(true);
+    setError(null);
+    setPhase("engine");
+    try {
+      const result = await fetchAIAnalysis(
+        username, stats, games,
+        (current, total) => setEnginePhase({ current, total }),
+        (p) => { setPhase(p); if (p === "ai") setEnginePhase(null); }
+      );
+      setPhase("done");
+      setAnalysis(result);
+    } catch (e: any) {
+      setError(e.message || "Analysis failed");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <motion.div
@@ -79,6 +74,32 @@ const InsightsPanel = ({ stats, games, username }: Props) => {
       className="space-y-4"
     >
       <h3 className="text-xs uppercase tracking-[0.15em] text-muted-foreground">Profile Breakdown</h3>
+
+      {phase === "idle" && !analysis && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-card/80 backdrop-blur-xl border border-border rounded-xl p-8 flex flex-col items-center gap-4 text-center"
+        >
+          <div className="space-y-1">
+            <p className="text-sm text-muted-foreground font-display italic">
+              {games.length} games loaded across {gamesWithPgn.length} with move data
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Stockfish will deep-analyze 5 games · AI reviews all {games.length} for patterns
+            </p>
+          </div>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={startAnalysis}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-foreground text-background text-sm font-display italic hover:opacity-90 transition-opacity"
+          >
+            <Sparkles className="h-4 w-4" />
+            Start Profile Breakdown
+          </motion.button>
+        </motion.div>
+      )}
 
       {loading && (
         <motion.div
