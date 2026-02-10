@@ -1,5 +1,6 @@
 import { TimeControlStats } from "@/lib/chess-api";
 import { TrendingUp, TrendingDown, Trophy } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface Props {
   label: string;
@@ -16,15 +17,25 @@ const RatingCard = ({ label, icon, stats, delay = 0 }: Props) => {
   const winRate = total > 0 ? ((record.win / total) * 100).toFixed(1) : "0";
 
   return (
-    <div
-      className="bg-card border border-border rounded-lg p-5 card-hover opacity-0 animate-fade-in"
-      style={{ animationDelay: `${delay}ms` }}
+    <motion.div
+      initial={{ opacity: 0, y: 40, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.6, delay: delay * 0.1, ease: [0.22, 1, 0.36, 1] }}
+      whileHover={{ y: -4, transition: { duration: 0.2 } }}
+      className="bg-card border border-border rounded-lg p-5 card-hover"
     >
       <div className="flex items-center gap-3 mb-4">
         <div className="p-2 rounded-sm bg-foreground/5 text-foreground/60">{icon}</div>
         <div>
           <h3 className="text-xs uppercase tracking-[0.15em] text-muted-foreground">{label}</h3>
-          <p className="text-3xl font-display italic font-light text-foreground">{last.rating}</p>
+          <motion.p
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: delay * 0.1 + 0.3, type: "spring", stiffness: 200 }}
+            className="text-3xl font-display italic font-light text-foreground"
+          >
+            {last.rating}
+          </motion.p>
         </div>
       </div>
 
@@ -58,13 +69,28 @@ const RatingCard = ({ label, icon, stats, delay = 0 }: Props) => {
             <span className="font-display italic text-lg text-foreground">{winRate}%</span>
           </div>
           <div className="h-1.5 rounded-full bg-muted overflow-hidden flex">
-            <div className="h-full bg-success" style={{ width: `${(record.win / total) * 100}%` }} />
-            <div className="h-full bg-muted-foreground/30" style={{ width: `${(record.draw / total) * 100}%` }} />
-            <div className="h-full bg-destructive" style={{ width: `${(record.loss / total) * 100}%` }} />
+            <motion.div
+              className="h-full bg-success"
+              initial={{ width: 0 }}
+              animate={{ width: `${(record.win / total) * 100}%` }}
+              transition={{ duration: 1, delay: delay * 0.1 + 0.4, ease: "easeOut" }}
+            />
+            <motion.div
+              className="h-full bg-muted-foreground/30"
+              initial={{ width: 0 }}
+              animate={{ width: `${(record.draw / total) * 100}%` }}
+              transition={{ duration: 1, delay: delay * 0.1 + 0.5, ease: "easeOut" }}
+            />
+            <motion.div
+              className="h-full bg-destructive"
+              initial={{ width: 0 }}
+              animate={{ width: `${(record.loss / total) * 100}%` }}
+              transition={{ duration: 1, delay: delay * 0.1 + 0.6, ease: "easeOut" }}
+            />
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

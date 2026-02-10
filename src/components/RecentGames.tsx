@@ -1,5 +1,6 @@
 import { RecentGame, getResult, getOpponentName, getOpponentRating, getPlayerRating } from "@/lib/chess-api";
 import { Clock, Zap, Gauge, Trophy, X, Minus } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface Props {
   games: RecentGame[];
@@ -22,7 +23,12 @@ const RecentGames = ({ games, username }: Props) => {
   if (!games.length) return null;
 
   return (
-    <div className="bg-card border border-border rounded-lg p-5 opacity-0 animate-fade-in" style={{ animationDelay: "400ms" }}>
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
+      className="bg-card border border-border rounded-lg p-5"
+    >
       <h3 className="text-xs uppercase tracking-[0.15em] text-muted-foreground mb-4">Recent Matches</h3>
       <div className="space-y-1">
         {games.map((game, i) => {
@@ -34,8 +40,11 @@ const RecentGames = ({ games, username }: Props) => {
           const date = new Date(game.end_time * 1000);
 
           return (
-            <a
+            <motion.a
               key={i}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.4, delay: 0.5 + i * 0.05, ease: [0.22, 1, 0.36, 1] }}
               href={game.url}
               target="_blank"
               rel="noopener noreferrer"
@@ -57,11 +66,11 @@ const RecentGames = ({ games, username }: Props) => {
                 </div>
               </div>
               <span className="text-sm font-display italic text-foreground">{myRating}</span>
-            </a>
+            </motion.a>
           );
         })}
       </div>
-    </div>
+    </motion.div>
   );
 };
 
