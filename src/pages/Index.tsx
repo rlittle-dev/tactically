@@ -195,7 +195,7 @@ const Index = () => {
                       key={name}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      onClick={() => setProfileCardUsername(name)}
+                      onClick={() => handleSearch(name)}
                       className="px-4 py-2 rounded-lg border border-border/60 bg-card/50 backdrop-blur-sm text-sm text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors font-display italic"
                     >
                       {name}
