@@ -139,12 +139,23 @@ export async function evaluateGame(
   // ── Accuracy calculation ──
   const allWinChances = [startEval.winChance, ...evaluatedMoves.map((m) => m.winChance)];
 
+  // CAPS2-style per-move accuracy: much steeper penalty curve
+  // Only awards 100 for moves that lose < 0.5% win probability
+  // A 5% WP loss ≈ 61% accuracy, 10% ≈ 34%, 20% ≈ 8%
   const moveAccuracy = (before: number, after: number, isWhite: boolean): number => {
     const winBefore = isWhite ? before : 100 - before;
     const winAfter = isWhite ? after : 100 - after;
-    if (winAfter >= winBefore) return 100;
+    
     const winDiff = winBefore - winAfter;
-    const raw = 103.1668 * Math.exp(-0.04354 * winDiff) - 3.1669;
+    
+    // If the move improved or maintained position, cap based on how close to best
+    if (winDiff <= 0.5) return 100;
+    if (winDiff <= 1) return 96;
+    if (winDiff <= 2) return 90;
+    
+    // Steep exponential decay for losses > 2% WP
+    // This produces: 3% → 82, 5% → 61, 8% → 39, 10% → 27, 15% → 11, 20% → 5
+    const raw = 103.1668 * Math.exp(-0.09 * winDiff) - 3.1669;
     return Math.max(0, Math.min(100, raw));
   };
 
@@ -156,13 +167,18 @@ export async function evaluateGame(
       const moveColor = evaluatedMoves[i].color;
       if (moveColor !== color) continue;
 
-      // Find this move's index in allWinChances
-      const wcIdx = i; // evaluatedMoves[i] corresponds to allWinChances[i] (before) and allWinChances[i+1] (after)
+      const wcIdx = i;
       accs.push(moveAccuracy(allWinChances[wcIdx], allWinChances[wcIdx + 1], isWhite));
     }
 
     if (accs.length === 0) return 100;
-    return Math.round(accs.reduce((a, b) => a + b, 0) / accs.length);
+    
+    // Use weighted mean that penalizes bad moves more (like CAPS2)
+    // Square root weighting: bad moves pull the average down harder
+    const weightedSum = accs.reduce((sum, a) => sum + Math.pow(a / 100, 2), 0);
+    const weightedAvg = Math.sqrt(weightedSum / accs.length) * 100;
+    
+    return Math.round(Math.max(0, Math.min(100, weightedAvg)));
   };
 
   const accuracy = {
