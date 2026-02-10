@@ -4,7 +4,7 @@ import {
   Clock, Zap, Gauge, RotateCcw, Github, Linkedin, TrendingUp, Brain, History,
   Share2, BookOpen, FileText, Puzzle, BarChart3, Sparkles, ChevronRight,
 } from "lucide-react";
-import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import UsernameSearch from "@/components/UsernameSearch";
 import ProfileHeader from "@/components/ProfileHeader";
 import RatingCard from "@/components/RatingCard";
@@ -26,23 +26,17 @@ const RevealSection = ({
   children: React.ReactNode;
   className?: string;
   delay?: number;
-}) => {
-  const variants = {
-    hidden: { opacity: 0, y: 40, filter: "blur(10px)" },
-    visible: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.8, delay, ease: [0.25, 0.46, 0.45, 0.94] as const } },
-  };
-  return (
-    <motion.div
-      variants={variants}
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: false, margin: "-60px" }}
-      className={className}
-    >
-      {children}
-    </motion.div>
-  );
-};
+}) => (
+  <motion.div
+    initial={{ opacity: 0, y: 30 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true, margin: "-60px" }}
+    transition={{ duration: 0.5, delay, ease: "easeOut" }}
+    className={className}
+  >
+    {children}
+  </motion.div>
+);
 
 /* ── Staggered grid children ── */
 const RevealItem = ({
@@ -53,23 +47,17 @@ const RevealItem = ({
   children: React.ReactNode;
   className?: string;
   index?: number;
-}) => {
-  const variants = {
-    hidden: { opacity: 0, y: 30, scale: 0.96, filter: "blur(6px)" },
-    visible: { opacity: 1, y: 0, scale: 1, filter: "blur(0px)", transition: { duration: 0.6, delay: index * 0.06, ease: [0.25, 0.46, 0.45, 0.94] as const } },
-  };
-  return (
-    <motion.div
-      variants={variants}
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: false, margin: "-40px" }}
-      className={className}
-    >
-      {children}
-    </motion.div>
-  );
-};
+}) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true, margin: "-40px" }}
+    transition={{ duration: 0.4, delay: index * 0.05, ease: "easeOut" }}
+    className={className}
+  >
+    {children}
+  </motion.div>
+);
 
 const FEATURES = [
   { icon: <TrendingUp className="h-5 w-5" />, title: "Rating Trends", desc: "Interactive charts tracking your Elo across Rapid, Blitz & Bullet with date-based timelines" },
@@ -99,10 +87,6 @@ const Index = () => {
   const [username, setUsername] = useState("");
   const [profileCardUsername, setProfileCardUsername] = useState<string | null>(null);
 
-  const { scrollYProgress } = useScroll();
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.12], [1, 0]);
-  const heroScale = useTransform(scrollYProgress, [0, 0.12], [1, 0.97]);
-  const heroY = useTransform(scrollYProgress, [0, 0.12], [0, -30]);
 
   useEffect(() => {
     if (routeUsername) setProfileCardUsername(routeUsername);
@@ -140,20 +124,11 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background relative flex flex-col">
       {/* Ambient glow + chess pattern */}
-      <div className="absolute inset-0 bottom-auto pointer-events-none" style={{ bottom: 0 }}>
+      <div className="absolute inset-0 pointer-events-none">
         <div className="chess-pattern" style={{ position: "absolute", inset: 0 }} />
-        <motion.div
-          animate={{ opacity: [0.03, 0.07, 0.03], scale: [1, 1.15, 1] }}
-          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[800px] rounded-full"
-          style={{ background: "radial-gradient(circle, hsl(0 0% 100% / 0.07) 0%, transparent 60%)" }}
-        />
-        {/* Secondary ambient orb */}
-        <motion.div
-          animate={{ opacity: [0.02, 0.05, 0.02], x: [0, 40, 0], y: [0, -20, 0] }}
-          transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-[60%] left-1/3 w-[500px] h-[500px] rounded-full"
-          style={{ background: "radial-gradient(circle, hsl(0 0% 100% / 0.04) 0%, transparent 70%)" }}
+        <div
+          className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[800px] rounded-full opacity-5"
+          style={{ background: "radial-gradient(circle, hsl(0 0% 100%) 0%, transparent 60%)" }}
         />
       </div>
 
@@ -200,11 +175,10 @@ const Index = () => {
           {showLanding && (
             <motion.div
               key="hero"
-              style={{ opacity: heroOpacity, scale: heroScale, y: heroY }}
-              initial={{ opacity: 0, y: 30, filter: "blur(12px)" }}
-              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-              exit={{ opacity: 0, y: -20, filter: "blur(8px)" }}
-              transition={{ duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
               className="text-center mb-14 space-y-6"
             >
               <motion.h2
@@ -261,7 +235,7 @@ const Index = () => {
                       key={player.username}
                       initial={{ opacity: 0, y: 12 }}
                       whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: false }}
+                      viewport={{ once: true }}
                       transition={{ delay: 0.1 + i * 0.06, duration: 0.5 }}
                       whileHover={{ scale: 1.08, borderColor: "hsl(0 0% 30%)" }}
                       whileTap={{ scale: 0.95 }}
@@ -276,13 +250,7 @@ const Index = () => {
               </RevealSection>
 
               {/* ── Divider ── */}
-              <motion.div
-                initial={{ scaleX: 0 }}
-                whileInView={{ scaleX: 1 }}
-                viewport={{ once: false }}
-                transition={{ duration: 1, ease: [0.25, 0.46, 0.45, 0.94] as const }}
-                className="h-px bg-gradient-to-r from-transparent via-border to-transparent max-w-md mx-auto"
-              />
+              <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent max-w-md mx-auto" />
 
               {/* ── How It Works ── */}
               <RevealSection className="space-y-8">
@@ -314,14 +282,7 @@ const Index = () => {
                 </div>
               </RevealSection>
 
-              {/* ── Divider ── */}
-              <motion.div
-                initial={{ scaleX: 0 }}
-                whileInView={{ scaleX: 1 }}
-                viewport={{ once: false }}
-                transition={{ duration: 1, ease: [0.25, 0.46, 0.45, 0.94] as const }}
-                className="h-px bg-gradient-to-r from-transparent via-border to-transparent max-w-md mx-auto"
-              />
+              <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent max-w-md mx-auto" />
 
               {/* ── Feature Grid ── */}
               <RevealSection className="space-y-8">
@@ -358,14 +319,7 @@ const Index = () => {
                 </div>
               </RevealSection>
 
-              {/* ── Divider ── */}
-              <motion.div
-                initial={{ scaleX: 0 }}
-                whileInView={{ scaleX: 1 }}
-                viewport={{ once: false }}
-                transition={{ duration: 1, ease: [0.25, 0.46, 0.45, 0.94] as const }}
-                className="h-px bg-gradient-to-r from-transparent via-border to-transparent max-w-md mx-auto"
-              />
+              <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent max-w-md mx-auto" />
 
               {/* ── PGN Upload ── */}
               <RevealSection className="space-y-6">
@@ -387,7 +341,7 @@ const Index = () => {
                       key={t}
                       initial={{ opacity: 0, scale: 0.9 }}
                       whileInView={{ opacity: 1, scale: 1 }}
-                      viewport={{ once: false }}
+                      viewport={{ once: true }}
                       transition={{ delay: i * 0.08, duration: 0.4 }}
                       className="px-3.5 py-1.5 rounded-lg border border-border/40 bg-card/20 text-xs text-muted-foreground font-mono hover:border-foreground/20 hover:text-foreground transition-colors"
                     >
