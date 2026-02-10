@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Clock, Zap, Gauge } from "lucide-react";
+import { Clock, Zap, Gauge, RotateCcw } from "lucide-react";
 import UsernameSearch from "@/components/UsernameSearch";
 import ProfileHeader from "@/components/ProfileHeader";
 import RatingCard from "@/components/RatingCard";
@@ -48,31 +48,48 @@ const Index = () => {
     }
   };
 
+  const handleReset = () => {
+    setProfile(null);
+    setStats(null);
+    setGames([]);
+    setUsername("");
+    setError(null);
+  };
+
+  const showLanding = !profile && !loading;
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative">
+      {/* Full-page chess pattern */}
+      <div className="fixed inset-0 chess-pattern pointer-events-none" />
+
       {/* Header */}
-      <header className="border-b border-border">
+      <header className="border-b border-border relative z-10">
         <div className="container max-w-5xl mx-auto px-4 py-5 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <button onClick={handleReset} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
             <span className="text-foreground text-2xl">♞</span>
             <h1 className="text-xl font-display italic font-medium text-foreground tracking-wide">Tactically</h1>
-          </div>
-          <p className="text-xs tracking-[0.2em] uppercase text-muted-foreground hidden sm:block">Est. MMXXV</p>
+          </button>
+          {profile ? (
+            <button
+              onClick={handleReset}
+              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <RotateCcw className="h-4 w-4" />
+              New Analysis
+            </button>
+          ) : (
+            <p className="text-xs tracking-[0.2em] uppercase text-muted-foreground hidden sm:block">Chess Performance Analyzer</p>
+          )}
         </div>
       </header>
 
-      <main className="container max-w-5xl mx-auto px-4 py-16 relative">
-        {/* Chess pattern background accent */}
-        {!profile && !loading && (
-          <div className="absolute inset-0 chess-pattern pointer-events-none" />
-        )}
-
+      <main className="container max-w-5xl mx-auto px-4 py-16 relative z-10">
         {/* Hero / Search */}
-        {!profile && !loading && (
-          <div className="text-center mb-12 space-y-5 relative">
-            <p className="text-sm tracking-[0.3em] uppercase text-muted-foreground font-light">Chess Performance Analyzer</p>
+        {showLanding && (
+          <div className="text-center mb-12 space-y-5">
             <h2 className="text-5xl sm:text-7xl font-display italic font-light text-foreground leading-[1.1]">
-              Know thy <span className="text-gradient font-medium">game</span>
+              Analyze Your <span className="text-gradient font-medium">Chess</span>
             </h2>
             <p className="text-muted-foreground text-base max-w-sm mx-auto leading-relaxed">
               Enter your Chess.com username for a full breakdown of your strengths, weaknesses & performance.
@@ -80,7 +97,7 @@ const Index = () => {
           </div>
         )}
 
-        <div className="mb-12 relative">
+        <div className="mb-12">
           <UsernameSearch onSearch={handleSearch} loading={loading} />
         </div>
 
@@ -96,24 +113,9 @@ const Index = () => {
 
             {/* Rating Cards Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <RatingCard
-                label="Rapid"
-                icon={<Clock className="h-5 w-5" />}
-                stats={stats.chess_rapid}
-                delay={100}
-              />
-              <RatingCard
-                label="Blitz"
-                icon={<Zap className="h-5 w-5" />}
-                stats={stats.chess_blitz}
-                delay={150}
-              />
-              <RatingCard
-                label="Bullet"
-                icon={<Gauge className="h-5 w-5" />}
-                stats={stats.chess_bullet}
-                delay={200}
-              />
+              <RatingCard label="Rapid" icon={<Clock className="h-5 w-5" />} stats={stats.chess_rapid} delay={100} />
+              <RatingCard label="Blitz" icon={<Zap className="h-5 w-5" />} stats={stats.chess_blitz} delay={150} />
+              <RatingCard label="Bullet" icon={<Gauge className="h-5 w-5" />} stats={stats.chess_bullet} delay={200} />
               <PuzzleCard stats={stats} />
             </div>
 
@@ -129,7 +131,7 @@ const Index = () => {
         )}
       </main>
 
-      <footer className="border-t border-border mt-20">
+      <footer className="border-t border-border mt-20 relative z-10">
         <div className="container max-w-5xl mx-auto px-4 py-6 text-center text-sm text-muted-foreground">
           Powered by the Chess.com Public API
         </div>

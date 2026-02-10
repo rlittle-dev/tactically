@@ -7,7 +7,7 @@ interface Props {
 
 const severityConfig = {
   high: { icon: <AlertTriangle className="h-5 w-5" />, border: "border-destructive/40", text: "text-destructive", bg: "bg-destructive/10" },
-  medium: { icon: <Info className="h-5 w-5" />, border: "border-primary/40", text: "text-primary", bg: "bg-primary/10" },
+  medium: { icon: <Info className="h-5 w-5" />, border: "border-foreground/20", text: "text-foreground", bg: "bg-foreground/5" },
   low: { icon: <CheckCircle className="h-5 w-5" />, border: "border-success/40", text: "text-success", bg: "bg-success/10" },
 };
 
