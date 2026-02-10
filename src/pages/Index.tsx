@@ -54,29 +54,33 @@ const Index = () => {
       <header className="border-b border-border">
         <div className="container max-w-5xl mx-auto px-4 py-5 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded bg-primary/20 flex items-center justify-center animate-pulse-glow">
-              <span className="text-primary font-bold text-lg">♞</span>
-            </div>
-            <h1 className="text-xl font-bold text-gradient">Tactically</h1>
+            <span className="text-foreground text-2xl">♞</span>
+            <h1 className="text-xl font-display italic font-medium text-foreground tracking-wide">Tactically</h1>
           </div>
-          <p className="text-sm text-muted-foreground hidden sm:block">Chess.com Stats Analyzer</p>
+          <p className="text-xs tracking-[0.2em] uppercase text-muted-foreground hidden sm:block">Est. MMXXV</p>
         </div>
       </header>
 
-      <main className="container max-w-5xl mx-auto px-4 py-10">
+      <main className="container max-w-5xl mx-auto px-4 py-16 relative">
+        {/* Chess pattern background accent */}
+        {!profile && !loading && (
+          <div className="absolute inset-0 chess-pattern pointer-events-none" />
+        )}
+
         {/* Hero / Search */}
         {!profile && !loading && (
-          <div className="text-center mb-10 space-y-4">
-            <h2 className="text-4xl sm:text-5xl font-bold text-foreground leading-tight">
-              Analyze your <span className="text-gradient">chess game</span>
+          <div className="text-center mb-12 space-y-5 relative">
+            <p className="text-sm tracking-[0.3em] uppercase text-muted-foreground font-light">Chess Performance Analyzer</p>
+            <h2 className="text-5xl sm:text-7xl font-display italic font-light text-foreground leading-[1.1]">
+              Know thy <span className="text-gradient font-medium">game</span>
             </h2>
-            <p className="text-muted-foreground text-lg max-w-md mx-auto">
-              Enter your Chess.com username to get a detailed breakdown of your strengths, weaknesses, and performance.
+            <p className="text-muted-foreground text-base max-w-sm mx-auto leading-relaxed">
+              Enter your Chess.com username for a full breakdown of your strengths, weaknesses & performance.
             </p>
           </div>
         )}
 
-        <div className="mb-10">
+        <div className="mb-12 relative">
           <UsernameSearch onSearch={handleSearch} loading={loading} />
         </div>
 

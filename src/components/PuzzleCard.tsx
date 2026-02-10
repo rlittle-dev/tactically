@@ -17,11 +17,11 @@ const PuzzleCard = ({ stats }: Props) => {
       style={{ animationDelay: "300ms" }}
     >
       <div className="flex items-center gap-3 mb-4">
-        <div className="p-2 rounded-md bg-primary/10 text-primary">
+        <div className="p-2 rounded-sm bg-foreground/5 text-foreground">
           <Lightbulb className="h-5 w-5" />
         </div>
         <div>
-          <h3 className="text-sm font-medium text-muted-foreground">Puzzles</h3>
+          <h3 className="text-xs font-display italic text-muted-foreground tracking-wide">Puzzles</h3>
           {puzzleRating && (
             <p className="text-2xl font-bold text-foreground font-mono">{puzzleRating}</p>
           )}

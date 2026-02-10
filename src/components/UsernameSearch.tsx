@@ -17,8 +17,8 @@ const UsernameSearch = ({ onSearch, loading }: Props) => {
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-md mx-auto">
       <div className="relative group">
-        <div className="absolute inset-0 rounded-lg bg-primary/20 blur-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-500" />
-        <div className="relative flex items-center bg-secondary border border-border rounded-lg overflow-hidden focus-within:border-primary/50 transition-colors">
+        <div className="absolute inset-0 rounded-sm bg-foreground/5 blur-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-500" />
+        <div className="relative flex items-center bg-secondary border border-border rounded-sm overflow-hidden focus-within:border-foreground/30 transition-colors">
           <Search className="ml-4 h-5 w-5 text-muted-foreground shrink-0" />
           <input
             type="text"

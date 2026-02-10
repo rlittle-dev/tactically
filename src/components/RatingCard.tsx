@@ -21,9 +21,9 @@ const RatingCard = ({ label, icon, stats, delay = 0 }: Props) => {
       style={{ animationDelay: `${delay}ms` }}
     >
       <div className="flex items-center gap-3 mb-4">
-        <div className="p-2 rounded-md bg-primary/10 text-primary">{icon}</div>
+        <div className="p-2 rounded-sm bg-foreground/5 text-foreground">{icon}</div>
         <div>
-          <h3 className="text-sm font-medium text-muted-foreground">{label}</h3>
+          <h3 className="text-xs font-display italic text-muted-foreground tracking-wide">{label}</h3>
           <p className="text-2xl font-bold text-foreground font-mono">{last.rating}</p>
         </div>
       </div>
