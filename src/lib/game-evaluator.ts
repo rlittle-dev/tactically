@@ -4,7 +4,7 @@
  */
 
 import { Chess } from "chess.js";
-import { StockfishEngine, StockfishEval, classifyMove, MoveClassification } from "./stockfish-engine";
+import { StockfishEngine, StockfishEval, classifyMove, cpToWinProb, MoveClassification } from "./stockfish-engine";
 
 export interface EvaluatedMove extends StockfishEval {
   classification: MoveClassification;
@@ -90,24 +90,27 @@ export async function evaluateGame(
 
   engine.destroy();
 
-  // Calculate accuracy (simplified formula inspired by Lichess)
-  const whiteMoveLosses = evaluatedMoves
-    .filter((m) => m.color === "w")
-    .map((m) => Math.max(0, m.classification.cpLoss));
-  const blackMoveLosses = evaluatedMoves
-    .filter((m) => m.color === "b")
-    .map((m) => Math.max(0, m.classification.cpLoss));
+  // Calculate accuracy using chess.com-style win probability method
+  // For each move, accuracy = how much win probability you preserved vs the best move
+  const calcAccuracy = (color: "w" | "b") => {
+    const playerMoves = evaluatedMoves.filter((m) => m.color === color);
+    if (playerMoves.length === 0) return 100;
 
-  const avgLoss = (losses: number[]) =>
-    losses.length > 0 ? losses.reduce((a, b) => a + b, 0) / losses.length : 0;
-
-  // Convert avg centipawn loss to accuracy percentage (rough formula)
-  const lossToAccuracy = (avgCpLoss: number) =>
-    Math.max(0, Math.min(100, 100 - avgCpLoss * 0.5));
+    let totalAccuracy = 0;
+    for (const move of playerMoves) {
+      // Win prob loss is already calculated; convert to per-move accuracy
+      // Chess.com formula: accuracy ≈ 103.1668 * exp(-0.04354 * winProbLoss) - 3.1669
+      // Simplified: if winProbLoss <= 0 (good move), accuracy = 100
+      const wpl = Math.max(0, move.classification.winProbLoss);
+      const moveAccuracy = Math.min(100, Math.max(0, 103.1668 * Math.exp(-0.04354 * wpl) - 3.1669));
+      totalAccuracy += moveAccuracy;
+    }
+    return Math.round(totalAccuracy / playerMoves.length);
+  };
 
   const accuracy = {
-    white: Math.round(lossToAccuracy(avgLoss(whiteMoveLosses))),
-    black: Math.round(lossToAccuracy(avgLoss(blackMoveLosses))),
+    white: calcAccuracy("w"),
+    black: calcAccuracy("b"),
   };
 
   // Generate summary for AI

@@ -70,6 +70,7 @@ function extractPgnHeader(pgn: string, header: string): string | null {
 }
 
 const classificationIcons: Record<string, { label: string; color: string }> = {
+  brilliant: { label: "!!", color: "text-cyan-400" },
   blunder: { label: "??", color: "text-red-500" },
   mistake: { label: "?", color: "text-orange-400" },
   inaccuracy: { label: "?!", color: "text-yellow-400" },
