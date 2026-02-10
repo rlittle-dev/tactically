@@ -10,7 +10,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { pgn, username, opponent, result, timeClass, playerRating, opponentRating } = await req.json();
+    const { pgn, username, opponent, result, timeClass, playerRating, opponentRating, engineAnalysis } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -27,12 +27,15 @@ serve(async (req) => {
       ? `PLAYER: ${username} (${playerRating})\nOPPONENT: ${opponent} (${opponentRating})\nTIME CONTROL: ${timeClass}\nRESULT: ${result}`
       : "This is an uploaded PGN. Extract player names, ratings, and result from the PGN headers if available.";
 
+    // Include Stockfish engine data if available
+    const engineContext = engineAnalysis
+      ? `\n\nSTOCKFISH ENGINE ANALYSIS (depth ${engineAnalysis.depth || 14}):\n${engineAnalysis.summary}\n\nIMPORTANT: Use the engine evaluation data above to ground your analysis. The centipawn losses identify the actual blunders and mistakes — reference these specific moves and explain WHY they were bad positionally/tactically.`
+      : "";
+
     const prompt = `You are an expert chess coach performing a detailed post-game analysis. Analyze this specific game and provide actionable feedback.
 
 ${playerContext}
-
-PGN:
-${pgn}
+${engineContext}
 
 PGN:
 ${pgn}
@@ -74,7 +77,7 @@ Analyze this game thoroughly and respond with ONLY valid JSON (no markdown, no c
   "opening_name": "Name of the opening played, if identifiable"
 }
 
-Provide 2-3 phases, 1-3 critical mistakes (or empty array if none), 1-3 things done well, and 3-5 practice recommendations. Be specific about move numbers and positions.`;
+Provide 2-3 phases, 1-3 critical mistakes (or empty array if none), 1-3 things done well, and 3-5 practice recommendations. Be specific about move numbers and positions. ${engineAnalysis ? "Base your critical_mistakes on the engine-identified blunders and mistakes above." : ""}`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
