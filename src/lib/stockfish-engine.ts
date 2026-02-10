@@ -28,10 +28,9 @@ export function cpToWinProb(cp: number): number {
 }
 
 /**
- * Classify a move using the exact Lichess thresholds.
- * Based on Win% loss (from the moving player's perspective):
- *   ≥30% = blunder, ≥20% = mistake, ≥10% = inaccuracy
- * Source: https://github.com/lichess-org/lila/blob/master/modules/tree/src/main/Advice.scala
+ * Classify a move based on Win% loss (from the moving player's perspective).
+ * Thresholds tuned to match chess.com-style sensitivity:
+ *   ≥20% = blunder, ≥10% = mistake, ≥5% = inaccuracy
  */
 export function classifyMove(prevScore: number, currentScore: number, isWhiteTurn: boolean): MoveClassification {
   const prevWinProb = cpToWinProb(prevScore);
@@ -44,10 +43,9 @@ export function classifyMove(prevScore: number, currentScore: number, isWhiteTur
 
   const cpLoss = Math.max(0, Math.round(winProbLoss)); // store for display
 
-  // Lichess thresholds (Win% loss)
-  if (winProbLoss >= 30) return { type: "blunder", cpLoss, winProbLoss };
-  if (winProbLoss >= 20) return { type: "mistake", cpLoss, winProbLoss };
-  if (winProbLoss >= 10) return { type: "inaccuracy", cpLoss, winProbLoss };
+  if (winProbLoss >= 20) return { type: "blunder", cpLoss, winProbLoss };
+  if (winProbLoss >= 10) return { type: "mistake", cpLoss, winProbLoss };
+  if (winProbLoss >= 5) return { type: "inaccuracy", cpLoss, winProbLoss };
   if (winProbLoss <= -5) return { type: "brilliant", cpLoss: Math.round(winProbLoss), winProbLoss };
   if (winProbLoss <= -1) return { type: "excellent", cpLoss: Math.round(winProbLoss), winProbLoss };
   return { type: "good", cpLoss, winProbLoss };
