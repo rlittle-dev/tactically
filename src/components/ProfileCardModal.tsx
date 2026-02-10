@@ -64,7 +64,7 @@ const ProfileCardModal = ({ username, onClose }: Props) => {
           <div className="flex items-center justify-between mb-3">
             <ShareButtons
               onDownload={() => downloadImage(`tactically-${username}`)}
-              onShare={() => copyShareLink()}
+              onShare={() => copyShareLink(`/player/${username}`)}
             />
             <button onClick={onClose} className="p-2 rounded-lg hover:bg-accent transition-colors text-muted-foreground hover:text-foreground">
               <X className="h-5 w-5" />
