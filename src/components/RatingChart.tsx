@@ -22,10 +22,9 @@ const RatingChart = ({ games, username, stats }: Props) => {
 
   const filteredGames = games.filter((g) => g.time_class === mode);
 
-  const data = [...filteredGames].reverse().map((game, i) => ({
-    game: i + 1,
+  const data = [...filteredGames].reverse().map((game) => ({
+    date: new Date(game.end_time * 1000).toLocaleDateString(undefined, { month: "short", day: "numeric" }),
     rating: getPlayerRating(game, username),
-    date: new Date(game.end_time * 1000).toLocaleDateString(),
   }));
 
   const hasData = data.length >= 2;
@@ -81,10 +80,11 @@ const RatingChart = ({ games, username, stats }: Props) => {
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(0, 0%, 12%)" />
                   <XAxis
-                    dataKey="game"
+                    dataKey="date"
                     tick={{ fill: "hsl(0, 0%, 40%)", fontSize: 11, fontFamily: "Cormorant Garamond" }}
                     tickLine={false}
                     axisLine={false}
+                    interval="preserveStartEnd"
                   />
                   <YAxis
                     domain={["dataMin - 20", "dataMax + 20"]}
