@@ -16,18 +16,58 @@ interface OpeningData {
   draws: number;
 }
 
+// Known system keywords that should become the display name when found
+const SYSTEM_KEYWORDS = [
+  "London System", "Catalan", "Kings Indian", "Queens Gambit", "Sicilian Defense",
+  "French Defense", "Caro Kann", "Pirc Defense", "Italian Game", "Ruy Lopez",
+  "Scotch Game", "English Opening", "Dutch Defense", "Grunfeld Defense",
+  "Nimzo Indian", "Bogo Indian", "Benoni Defense", "Scandinavian Defense",
+  "Alekhine Defense", "Philidor Defense", "Petroff Defense", "Vienna Game",
+  "Kings Gambit", "Budapest Gambit", "Trompowsky Attack", "Torre Attack",
+  "Colle System", "Zukertort Opening", "Reti Opening", "Bird Opening",
+  "Slav Defense", "Semi Slav", "Tarrasch Defense", "Nimzowitsch Defense",
+  "Owen Defense", "Modern Defense", "Czech Defense",
+];
+
+function simplifyOpeningName(raw: string): string {
+  // Remove move notations like "2...Nf6", "3.e3", "2.Nf3" etc.
+  let name = raw.replace(/\d+\.{1,3}\s*\S+/g, "").trim();
+  // Remove trailing numbers and dots
+  name = name.replace(/[\d.]+\s*$/, "").trim();
+
+  // Check for known system names (longest match first)
+  const sorted = [...SYSTEM_KEYWORDS].sort((a, b) => b.length - a.length);
+  for (const system of sorted) {
+    if (name.toLowerCase().includes(system.toLowerCase())) {
+      return system;
+    }
+  }
+
+  // Fallback: take the first two meaningful words (the base opening name)
+  const words = name.split(/\s+/).filter(Boolean);
+  // Find a natural break — "Defense", "Game", "Opening", "Attack", "Gambit", "System"
+  const breakWords = ["Defense", "Game", "Opening", "Attack", "Gambit", "System", "Variation"];
+  for (let i = 0; i < words.length; i++) {
+    if (breakWords.includes(words[i])) {
+      return words.slice(0, i + 1).join(" ");
+    }
+  }
+
+  return words.slice(0, 2).join(" ") || name;
+}
+
 function extractOpening(pgn: string): { name: string; slug: string } | null {
   const match = pgn.match(/\[ECOUrl "https:\/\/www\.chess\.com\/openings\/([^"]+)"\]/);
   if (match) {
     const slug = match[1];
-    const name = slug.replace(/-/g, " ").replace(/\.\.\./g, "…");
-    return { name, slug };
+    const rawName = slug.replace(/-/g, " ").replace(/\.\.\./g, "…");
+    return { name: simplifyOpeningName(rawName), slug };
   }
   const nameMatch = pgn.match(/\[Opening "([^"]+)"\]/);
   if (nameMatch) {
-    const name = nameMatch[1];
-    const slug = name.replace(/\s+/g, "-").toLowerCase();
-    return { name, slug };
+    const rawName = nameMatch[1];
+    const slug = rawName.replace(/\s+/g, "-").toLowerCase();
+    return { name: simplifyOpeningName(rawName), slug };
   }
   return null;
 }
@@ -56,9 +96,14 @@ const item = {
 };
 
 const TopOpenings = ({ games, username }: Props) => {
+  // Only consider games from the last 30 days
+  const now = Date.now() / 1000;
+  const thirtyDaysAgo = now - 30 * 24 * 60 * 60;
+  const recentGames = games.filter((g) => g.end_time >= thirtyDaysAgo);
+
   const openingMap = new Map<string, OpeningData>();
 
-  for (const game of games) {
+  for (const game of recentGames) {
     if (!game.pgn) continue;
     const opening = extractOpening(game.pgn);
     if (!opening) continue;
