@@ -28,36 +28,29 @@ export function cpToWinProb(cp: number): number {
 }
 
 /**
- * Classify a move based on eval drop in pawns (chess.com style).
- * All eval drops are measured from the moving player's perspective.
- * A drop from +6 to +4 IS a miss (you had a big advantage and let it slip).
- * Not capitalizing on a blunder IS flagged.
+ * Classify a move using the exact Lichess thresholds.
+ * Based on Win% loss (from the moving player's perspective):
+ *   ≥30% = blunder, ≥20% = mistake, ≥10% = inaccuracy
+ * Source: https://github.com/lichess-org/lila/blob/master/modules/tree/src/main/Advice.scala
  */
 export function classifyMove(prevScore: number, currentScore: number, isWhiteTurn: boolean): MoveClassification {
   const prevWinProb = cpToWinProb(prevScore);
   const currWinProb = cpToWinProb(currentScore);
 
-  const winProbLoss = isWhiteTurn
-    ? prevWinProb - currWinProb
-    : (100 - prevWinProb) - (100 - currWinProb);
+  // Win% from the moving player's perspective
+  const winBefore = isWhiteTurn ? prevWinProb : 100 - prevWinProb;
+  const winAfter = isWhiteTurn ? currWinProb : 100 - currWinProb;
+  const winProbLoss = winBefore - winAfter; // positive = lost winning chances
 
-  // Eval from the moving player's perspective (in pawns)
-  const evalBefore = (isWhiteTurn ? prevScore : -prevScore) / 100;
-  const evalAfter = (isWhiteTurn ? currentScore : -currentScore) / 100;
-  const evalDrop = evalBefore - evalAfter; // positive = player lost eval
+  const cpLoss = Math.max(0, Math.round(winProbLoss)); // store for display
 
-  const cpLossAbs = Math.max(0, Math.round(evalDrop * 100));
-
-  // Blunder: ≥2 pawn eval drop
-  if (evalDrop >= 2) return { type: "blunder", cpLoss: cpLossAbs, winProbLoss };
-  // Mistake: ≥1 pawn eval drop
-  if (evalDrop >= 1) return { type: "mistake", cpLoss: cpLossAbs, winProbLoss };
-  // Inaccuracy: ≥0.5 pawn eval drop
-  if (evalDrop >= 0.5) return { type: "inaccuracy", cpLoss: cpLossAbs, winProbLoss };
-  // Brilliant / excellent based on win prob gain
-  if (winProbLoss <= -5) return { type: "brilliant", cpLoss: Math.round(evalDrop * 100), winProbLoss };
-  if (winProbLoss <= -1) return { type: "excellent", cpLoss: Math.round(evalDrop * 100), winProbLoss };
-  return { type: "good", cpLoss: cpLossAbs, winProbLoss };
+  // Lichess thresholds (Win% loss)
+  if (winProbLoss >= 30) return { type: "blunder", cpLoss, winProbLoss };
+  if (winProbLoss >= 20) return { type: "mistake", cpLoss, winProbLoss };
+  if (winProbLoss >= 10) return { type: "inaccuracy", cpLoss, winProbLoss };
+  if (winProbLoss <= -5) return { type: "brilliant", cpLoss: Math.round(winProbLoss), winProbLoss };
+  if (winProbLoss <= -1) return { type: "excellent", cpLoss: Math.round(winProbLoss), winProbLoss };
+  return { type: "good", cpLoss, winProbLoss };
 }
 
 const STOCKFISH_PATH = "/stockfish/stockfish-asm.js";
