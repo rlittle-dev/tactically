@@ -32,10 +32,10 @@ serve(async (req) => {
 
     // Include Stockfish engine data if available
     const engineContext = engineAnalysis
-      ? `\n\nSTOCKFISH ENGINE ANALYSIS:\n${engineAnalysis}\n\nIMPORTANT: Use the engine data above to ground your analysis. The accuracy percentages and identified blunders/mistakes are from Stockfish — reference these specific findings when identifying weaknesses and strengths. Your recommendations should directly address the patterns found by the engine.`
+      ? `\n\nSTOCKFISH ENGINE ANALYSIS (aggregated across recent games):\n${engineAnalysis}\n\nIMPORTANT: Use the engine data above to identify PATTERNS and TRENDS — do NOT reference specific moves or move numbers. Focus on recurring themes like "frequently loses material in the middlegame" or "struggles with endgame technique" rather than citing individual blunders.`
       : "";
 
-    const prompt = `You are an expert chess coach analyzing a Chess.com player's profile. Based on the data below, provide a detailed analysis grounded in engine findings.
+    const prompt = `You are an expert chess coach writing a profile-level overview for a Chess.com player. Focus on BROAD PATTERNS and CONSISTENT TENDENCIES — NOT specific moves or individual game moments.
 
 PLAYER: ${username}
 ${engineContext}
@@ -55,27 +55,33 @@ Analyze and respond with ONLY valid JSON (no markdown, no code fences) in this e
   "weaknesses": [
     {
       "category": "opening" | "middlegame" | "endgame" | "tactics" | "time_management" | "positional",
-      "title": "short title",
-      "description": "2-3 sentence explanation",
+      "title": "short trend-based title (e.g. 'Weak endgame technique', 'Misses tactical patterns')",
+      "description": "2-3 sentences describing the recurring pattern across games, NOT referencing specific moves or game numbers",
       "severity": "high" | "medium" | "low",
       "lichess_themes": ["theme1", "theme2"]
     }
   ],
   "strengths": [
     {
-      "title": "short title",
-      "description": "1-2 sentence explanation"
+      "title": "short trend-based title",
+      "description": "1-2 sentences describing a consistent strength across multiple games"
     }
   ],
-  "overall_assessment": "2-3 sentence overall assessment of the player",
+  "overall_assessment": "2-3 sentence high-level summary of the player's style, rating trajectory, and main areas for growth. Do NOT mention specific moves.",
   "recommended_puzzles": [
     {
-      "theme": "lichess puzzle theme slug like endgame, middlegame, short, long, mateIn2, fork, pin, hangingPiece, etc",
+      "theme": "valid Lichess training theme slug",
       "label": "Human readable label",
-      "reason": "Why this helps"
+      "reason": "Why this addresses a pattern in their play (not a single game moment)"
     }
   ]
 }
+
+CRITICAL RULES:
+- NEVER reference specific move numbers, game numbers, or individual positions
+- Focus on patterns like "tends to leave pieces undefended", "strong opening preparation", "struggles to convert winning endgames"
+- Weaknesses and strengths should be trends observable across MULTIPLE games
+- Recommendations should address habitual issues, not one-off mistakes
 
 For lichess_themes and recommended_puzzles.theme, use valid Lichess training theme slugs like: opening, middlegame, endgame, short, long, mateIn1, mateIn2, mateIn3, fork, pin, skewer, hangingPiece, trappedPiece, discoveredAttack, doubleCheck, sacrifice, deflection, decoy, backRankMate, kingsideAttack, queensideAttack, advancedPawn, quietMove, xRayAttack, interference, exposedKing, attraction, clearance, zugzwang.`;
 
