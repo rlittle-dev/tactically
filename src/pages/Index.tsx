@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Clock, Zap, Gauge, RotateCcw } from "lucide-react";
+import { Clock, Zap, Gauge, RotateCcw, Github, Linkedin } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import UsernameSearch from "@/components/UsernameSearch";
 import ProfileHeader from "@/components/ProfileHeader";
@@ -188,8 +188,16 @@ const Index = () => {
       </main>
 
       <footer className="border-t border-border/50 mt-20 relative z-10">
-        <div className="container max-w-5xl mx-auto px-4 py-6 text-center text-sm text-muted-foreground">
-          Powered by the Chess.com Public API
+        <div className="container max-w-5xl mx-auto px-4 py-6 flex flex-col items-center gap-3 text-sm text-muted-foreground">
+          <div className="flex items-center gap-4">
+            <a href="https://github.com/rlittle-dev/tactically" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
+              <Github className="h-5 w-5" />
+            </a>
+            <a href="https://www.linkedin.com/in/ryan---little/" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
+              <Linkedin className="h-5 w-5" />
+            </a>
+          </div>
+          <span>Powered by the Chess.com Public API</span>
         </div>
       </footer>
     </div>
