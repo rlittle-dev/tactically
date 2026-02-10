@@ -54,27 +54,30 @@ export async function fetchStats(username: string): Promise<ChessStats> {
   return res.json();
 }
 
-export async function fetchRecentGames(username: string, monthsBack = 3): Promise<RecentGame[]> {
+export async function fetchRecentGames(username: string, minGames = 20): Promise<RecentGame[]> {
   const archiveRes = await fetch(`${BASE}/${username}/games/archives`);
   if (!archiveRes.ok) return [];
   const { archives } = await archiveRes.json();
   if (!archives || archives.length === 0) return [];
 
-  // Fetch the last N months of archives for more robust data
-  const recentArchives = archives.slice(-monthsBack);
-
   const allGames: RecentGame[] = [];
-  const results = await Promise.allSettled(
-    recentArchives.map((url: string) => fetch(url).then((r) => r.ok ? r.json() : null))
-  );
 
-  for (const result of results) {
-    if (result.status === "fulfilled" && result.value?.games) {
-      allGames.push(...result.value.games);
-    }
+  // Start from the most recent archive and work backwards until we have enough games
+  for (let i = archives.length - 1; i >= 0 && i >= archives.length - 6; i--) {
+    try {
+      const res = await fetch(archives[i]);
+      if (res.ok) {
+        const { games } = await res.json();
+        if (games) allGames.push(...games);
+      }
+    } catch {}
+
+    // Once we have the first month loaded, check if we have enough
+    if (i === archives.length - 1 && allGames.length >= minGames) break;
+    // For subsequent months, stop once we hit the minimum
+    if (allGames.length >= minGames) break;
   }
 
-  // Sort by end_time descending and return all for analysis
   return allGames.sort((a, b) => b.end_time - a.end_time);
 }
 

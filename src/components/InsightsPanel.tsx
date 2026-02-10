@@ -45,7 +45,7 @@ const InsightsPanel = ({ stats, games, username }: Props) => {
   const [enginePhase, setEnginePhase] = useState<{ current: number; total: number } | null>(null);
   const [phase, setPhase] = useState<"idle" | "engine" | "ai" | "done">("idle");
 
-  const gamesWithPgn = games.filter((g) => g.pgn);
+  
 
   const startAnalysis = async () => {
     setLoading(true);
@@ -82,7 +82,7 @@ const InsightsPanel = ({ stats, games, username }: Props) => {
           className="bg-card/80 backdrop-blur-xl border border-border rounded-xl p-8 flex flex-col items-center gap-4 text-center"
         >
           <p className="text-xs tracking-wide text-muted-foreground">
-            <span className="font-display italic">{games.length}</span> games found · <span className="font-display italic">{gamesWithPgn.length}</span> with move data · engine analyzes top <span className="font-display italic">5</span>
+            Analyze recent games for strengths, weaknesses & training recommendations
           </p>
           <motion.button
             whileHover={{ scale: 1.05 }}
@@ -111,7 +111,7 @@ const InsightsPanel = ({ stats, games, username }: Props) => {
           {enginePhase ? (
             <>
               <p className="text-sm text-muted-foreground font-display italic">
-                Analyzing game {enginePhase.current} of {enginePhase.total} with Stockfish…
+                Analyzing recent games with Stockfish…
               </p>
               <div className="w-48 bg-accent/30 rounded-full h-1.5 overflow-hidden">
                 <motion.div
