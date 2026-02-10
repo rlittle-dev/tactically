@@ -53,9 +53,9 @@ const Index = () => {
   const showLanding = !profile && !loading;
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
-      {/* Ambient glow */}
-      <div className="fixed inset-0 pointer-events-none">
+    <div className="min-h-screen bg-background relative">
+      {/* Ambient glow + chess pattern contained to main area */}
+      <div className="absolute inset-0 bottom-auto pointer-events-none" style={{ bottom: 0 }}>
         <div className="chess-pattern" style={{ position: "absolute", inset: 0 }} />
         <motion.div
           animate={{
@@ -187,7 +187,7 @@ const Index = () => {
         )}
       </main>
 
-      <footer className="border-t border-border/50 mt-20 relative z-10">
+      <footer className="relative z-10 border-t border-border/50 bg-background">
         <div className="container max-w-5xl mx-auto px-4 py-6 flex flex-col items-center gap-3 text-sm text-muted-foreground">
           <div className="flex items-center gap-4">
             <a href="https://github.com/rlittle-dev/tactically" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
