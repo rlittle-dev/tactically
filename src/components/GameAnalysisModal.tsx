@@ -342,7 +342,7 @@ const GameAnalysisModal = (props: Props) => {
                 {phase === "engine" && engineProgress && (
                   <>
                     <p className="text-sm text-muted-foreground font-display italic">
-                      Analyzing with Stockfish...
+                      Analyzing with Stockfish 17 NNUE...
                     </p>
                     <div className="w-48 bg-accent/30 rounded-full h-1.5 overflow-hidden">
                       <motion.div
@@ -359,7 +359,7 @@ const GameAnalysisModal = (props: Props) => {
                 )}
                 {phase === "engine" && !engineProgress && (
                   <p className="text-sm text-muted-foreground font-display italic">
-                    Initializing Stockfish engine...
+                    Connecting to chess-api.com...
                   </p>
                 )}
                 {phase === "ai" && (

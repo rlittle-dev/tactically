@@ -1,31 +1,78 @@
 /**
- * Evaluates all positions in a PGN using chess.js + Stockfish engine.
- * Returns centipawn evaluations for each move.
+ * Evaluates all positions in a PGN using chess-api.com (Stockfish 17 NNUE).
+ * Returns evaluations, classifications, and accuracy for each move.
  */
 
 import { Chess } from "chess.js";
-import { StockfishEngine, StockfishEval, classifyMove, cpToWinProb, MoveClassification } from "./stockfish-engine";
 
-export interface EvaluatedMove extends StockfishEval {
-  classification: MoveClassification;
+export interface MoveClassification {
+  type: "blunder" | "mistake" | "inaccuracy" | "good" | "excellent" | "brilliant" | "book";
+  winProbLoss: number;
+}
+
+export interface EvaluatedMove {
+  fen: string;
+  moveNumber: number;
+  move: string;
   san: string;
+  score: number; // centipawns from white's perspective
+  winChance: number; // 0-100 from white's perspective
+  bestMove: string | null;
+  bestMoveSan: string | null;
+  depth: number;
+  mate: number | null;
+  classification: MoveClassification;
   color: "w" | "b";
 }
 
 export interface GameEvaluation {
   moves: EvaluatedMove[];
   accuracy: { white: number; black: number };
-  summary: string; // brief text summary of engine findings
+  summary: string;
+}
+
+interface ChessApiResponse {
+  eval: number;
+  winChance: number;
+  move: string;
+  san: string;
+  depth: number;
+  mate: number | null;
+  type: string;
+  text: string;
+}
+
+async function evalPosition(fen: string, depth: number = 16): Promise<ChessApiResponse> {
+  const res = await fetch("https://chess-api.com/v1", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ fen, depth, maxThinkingTime: 100 }),
+  });
+  if (!res.ok) throw new Error(`chess-api error: ${res.status}`);
+  return res.json();
+}
+
+/**
+ * Classify a move based on Win% loss from the moving player's perspective.
+ * Thresholds calibrated to match chess.com-style sensitivity.
+ */
+function classifyMove(winBefore: number, winAfter: number): MoveClassification {
+  const winProbLoss = winBefore - winAfter;
+
+  if (winProbLoss >= 20) return { type: "blunder", winProbLoss };
+  if (winProbLoss >= 10) return { type: "mistake", winProbLoss };
+  if (winProbLoss >= 5) return { type: "inaccuracy", winProbLoss };
+  if (winProbLoss <= -5) return { type: "brilliant", winProbLoss };
+  if (winProbLoss <= -1) return { type: "excellent", winProbLoss };
+  return { type: "good", winProbLoss };
 }
 
 export async function evaluateGame(
   pgn: string,
   onProgress?: (current: number, total: number) => void,
-  depth: number = 14
 ): Promise<GameEvaluation> {
   const chess = new Chess();
 
-  // Load PGN
   try {
     chess.loadPgn(pgn);
   } catch {
@@ -35,24 +82,13 @@ export async function evaluateGame(
   const history = chess.history({ verbose: true });
   if (history.length === 0) throw new Error("No moves found in PGN");
 
-  // Initialize engine
-  const engine = new StockfishEngine();
-  try {
-    await engine.init();
-  } catch {
-    throw new Error("Failed to initialize Stockfish engine. Your browser may not support WebAssembly.");
-  }
-
   const evaluatedMoves: EvaluatedMove[] = [];
-
-  // Reset board to starting position
   const replayChess = new Chess();
 
-  // Evaluate starting position first (white to move, so score is already from white's perspective)
-  const startEval = await engine.evaluate(replayChess.fen(), depth);
-  // Stockfish returns score from side-to-move's perspective.
-  // Normalize all scores to white's perspective for consistent comparison.
-  let prevScore = startEval.score; // starting pos is white's turn, so already white's perspective
+  // Evaluate starting position
+  const startData = await evalPosition(replayChess.fen());
+  // chess-api.com winChance: >50 = white winning, <50 = black winning
+  let prevWinChance = startData.winChance;
 
   for (let i = 0; i < history.length; i++) {
     const move = history[i];
@@ -63,74 +99,60 @@ export async function evaluateGame(
 
     onProgress?.(i + 1, history.length);
 
-    const evalResult = await engine.evaluate(fen, depth);
+    const evalData = await evalPosition(fen);
 
-    // Stockfish scores are from side-to-move's perspective.
-    // After white moves, it's black's turn, so negate to get white's perspective.
-    // After black moves, it's white's turn, so score is already white's perspective.
-    const normalizedScore = wasWhiteTurn ? -evalResult.score : evalResult.score;
+    // winChance from chess-api is always from white's perspective (>50 = white winning)
+    const currWinChance = evalData.winChance;
 
-    const classification = classifyMove(prevScore, normalizedScore, wasWhiteTurn);
+    // Convert to moving player's perspective for classification
+    const playerWinBefore = wasWhiteTurn ? prevWinChance : 100 - prevWinChance;
+    const playerWinAfter = wasWhiteTurn ? currWinChance : 100 - currWinChance;
+
+    const classification = classifyMove(playerWinBefore, playerWinAfter);
 
     evaluatedMoves.push({
       fen,
       moveNumber: Math.floor(i / 2) + 1,
       move: move.san,
       san: move.san,
-      score: normalizedScore,
-      bestMove: evalResult.bestMove,
-      depth: evalResult.depth,
-      mate: evalResult.mate,
+      score: Math.round(evalData.eval * 100), // convert pawns to centipawns
+      winChance: currWinChance,
+      bestMove: evalData.move || null,
+      bestMoveSan: evalData.san || null,
+      depth: evalData.depth,
+      mate: evalData.mate,
       classification,
       color: wasWhiteTurn ? "w" : "b",
     });
 
-    prevScore = normalizedScore;
+    prevWinChance = currWinChance;
   }
 
-  engine.destroy();
+  // ── Accuracy calculation ──
+  // Uses chess.com's CAPS formula: exponential decay based on Win% loss
+  const allWinChances = [startData.winChance, ...evaluatedMoves.map((m) => m.winChance)];
 
-  // ── Game accuracy calculation (chess.com CAPS-style) ──
-  // Per-move accuracy = how much of the player's winning chances they retained.
-  // moveAccuracy = min(100, winAfter / winBefore * 100)
-  // Game accuracy = simple average of all per-move accuracies for that color.
-
-  const allWinPercents = [cpToWinProb(startEval.score), ...evaluatedMoves.map((m) => cpToWinProb(m.score))];
+  const moveAccuracy = (before: number, after: number, isWhite: boolean): number => {
+    const winBefore = isWhite ? before : 100 - before;
+    const winAfter = isWhite ? after : 100 - after;
+    if (winAfter >= winBefore) return 100;
+    const winDiff = winBefore - winAfter;
+    const raw = 103.1668 * Math.exp(-0.04354 * winDiff) - 3.1669;
+    return Math.max(0, Math.min(100, raw));
+  };
 
   const calcGameAccuracy = (color: "w" | "b") => {
     const isWhite = color === "w";
-    const moveAccuracies: number[] = [];
+    const accs: number[] = [];
 
     for (let i = 0; i < evaluatedMoves.length; i++) {
       const moveColor = i % 2 === 0 ? "w" : "b";
       if (moveColor !== color) continue;
-
-      const prevWP = allWinPercents[i];
-      const currWP = allWinPercents[i + 1];
-
-      // Convert to moving player's perspective
-      const winBefore = isWhite ? prevWP : 100 - prevWP;
-      const winAfter = isWhite ? currWP : 100 - currWP;
-
-      // If player improved or maintained, 100% accuracy for this move
-      if (winAfter >= winBefore) {
-        moveAccuracies.push(100);
-        continue;
-      }
-
-      // Retention: what fraction of winning chances did they keep?
-      // Guard against division by near-zero (already lost position)
-      if (winBefore < 1) {
-        moveAccuracies.push(100); // can't lose what you don't have
-        continue;
-      }
-
-      const retention = (winAfter / winBefore) * 100;
-      moveAccuracies.push(Math.max(0, Math.min(100, retention)));
+      accs.push(moveAccuracy(allWinChances[i], allWinChances[i + 1], isWhite));
     }
 
-    if (moveAccuracies.length === 0) return 100;
-    return Math.round(moveAccuracies.reduce((a, b) => a + b, 0) / moveAccuracies.length);
+    if (accs.length === 0) return 100;
+    return Math.round(accs.reduce((a, b) => a + b, 0) / accs.length);
   };
 
   const accuracy = {
@@ -144,7 +166,7 @@ export async function evaluateGame(
   const inaccuracies = evaluatedMoves.filter((m) => m.classification.type === "inaccuracy");
 
   const summaryLines = [
-    `Engine analysis at depth ${depth}:`,
+    `Stockfish 17 NNUE analysis (chess-api.com):`,
     `White accuracy: ${accuracy.white}%, Black accuracy: ${accuracy.black}%`,
     `Blunders: ${blunders.length}, Mistakes: ${mistakes.length}, Inaccuracies: ${inaccuracies.length}`,
   ];
@@ -153,7 +175,7 @@ export async function evaluateGame(
     summaryLines.push(
       "Critical blunders: " +
         blunders
-          .map((b) => `${b.moveNumber}${b.color === "w" ? "." : "..."} ${b.san} (${b.classification.cpLoss}cp loss)`)
+          .map((b) => `${b.moveNumber}${b.color === "w" ? "." : "..."} ${b.san} (${Math.round(b.classification.winProbLoss)}% WP loss)`)
           .join(", ")
     );
   }
@@ -162,14 +184,10 @@ export async function evaluateGame(
     summaryLines.push(
       "Mistakes: " +
         mistakes
-          .map((m) => `${m.moveNumber}${m.color === "w" ? "." : "..."} ${m.san} (${m.classification.cpLoss}cp loss)`)
+          .map((m) => `${m.moveNumber}${m.color === "w" ? "." : "..."} ${m.san} (${Math.round(m.classification.winProbLoss)}% WP loss)`)
           .join(", ")
     );
   }
 
-  return {
-    moves: evaluatedMoves,
-    accuracy,
-    summary: summaryLines.join("\n"),
-  };
+  return { moves: evaluatedMoves, accuracy, summary: summaryLines.join("\n") };
 }

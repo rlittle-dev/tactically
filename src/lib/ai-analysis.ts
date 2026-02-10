@@ -36,7 +36,7 @@ async function batchEngineAnalysis(
   for (let i = 0; i < gamesToAnalyze.length; i++) {
     onProgress?.(i + 1, gamesToAnalyze.length);
     try {
-      const evalResult = await evaluateGame(gamesToAnalyze[i].pgn, undefined, 10);
+      const evalResult = await evaluateGame(gamesToAnalyze[i].pgn);
       results.push({ pgn: gamesToAnalyze[i].pgn, eval: evalResult });
     } catch (err) {
       console.warn(`Engine eval failed for game ${i + 1}:`, err);
