@@ -1,10 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ChevronRight, Target, CheckCircle2, AlertTriangle, BookOpen, Loader2, ExternalLink } from "lucide-react";
+import { X, ChevronRight, Target, CheckCircle2, AlertTriangle, BookOpen, Loader2, ExternalLink, BarChart3 } from "lucide-react";
 import { RecentGame, getResult, getOpponentName, getOpponentRating, getPlayerRating } from "@/lib/chess-api";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useShareAsImage, ShareButtons } from "@/hooks/use-share-image";
+import { evaluateGame, GameEvaluation, EvaluatedMove } from "@/lib/game-evaluator";
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 
 interface GameAnalysis {
   summary: string;
@@ -67,16 +69,130 @@ function extractPgnHeader(pgn: string, header: string): string | null {
   return match ? match[1] : null;
 }
 
+const classificationIcons: Record<string, { label: string; color: string }> = {
+  blunder: { label: "??", color: "text-red-500" },
+  mistake: { label: "?", color: "text-orange-400" },
+  inaccuracy: { label: "?!", color: "text-yellow-400" },
+  good: { label: "", color: "text-muted-foreground" },
+  excellent: { label: "!", color: "text-emerald-400" },
+  book: { label: "📖", color: "text-blue-400" },
+};
+
+// Eval chart component
+const EvalChart = ({ moves }: { moves: EvaluatedMove[] }) => {
+  const data = moves.map((m, i) => ({
+    index: i,
+    label: `${m.moveNumber}${m.color === "w" ? "." : "..."} ${m.san}`,
+    score: Math.max(-500, Math.min(500, m.score)) / 100, // Clamp to ±5 pawns
+    rawScore: m.score,
+    classification: m.classification.type,
+  }));
+
+  return (
+    <div className="border border-border rounded-lg p-3 bg-card/50">
+      <div className="flex items-center gap-2 mb-2">
+        <BarChart3 className="h-4 w-4 text-muted-foreground" />
+        <span className="text-xs uppercase tracking-[0.15em] text-muted-foreground">Engine Evaluation</span>
+      </div>
+      <ResponsiveContainer width="100%" height={140}>
+        <AreaChart data={data} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
+          <defs>
+            <linearGradient id="evalGradientUp" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="hsl(0, 0%, 95%)" stopOpacity={0.4} />
+              <stop offset="100%" stopColor="hsl(0, 0%, 95%)" stopOpacity={0} />
+            </linearGradient>
+            <linearGradient id="evalGradientDown" x1="0" y1="1" x2="0" y2="0">
+              <stop offset="0%" stopColor="hsl(0, 0%, 30%)" stopOpacity={0.4} />
+              <stop offset="100%" stopColor="hsl(0, 0%, 30%)" stopOpacity={0} />
+            </linearGradient>
+          </defs>
+          <ReferenceLine y={0} stroke="hsl(0, 0%, 40%)" strokeDasharray="3 3" />
+          <XAxis dataKey="index" hide />
+          <YAxis domain={[-5, 5]} hide />
+          <Tooltip
+            contentStyle={{
+              background: "hsl(0 0% 8%)",
+              border: "1px solid hsl(0 0% 20%)",
+              borderRadius: "8px",
+              fontSize: "12px",
+              color: "hsl(0 0% 90%)",
+            }}
+            formatter={(value: number) => [`${value > 0 ? "+" : ""}${value.toFixed(1)}`, "Eval"]}
+            labelFormatter={(idx: number) => data[idx]?.label || ""}
+          />
+          <Area
+            type="monotone"
+            dataKey="score"
+            stroke="hsl(0, 0%, 80%)"
+            strokeWidth={1.5}
+            fill="url(#evalGradientUp)"
+          />
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
+  );
+};
+
+// Accuracy display
+const AccuracyDisplay = ({ accuracy }: { accuracy: { white: number; black: number } }) => (
+  <div className="flex gap-4 items-center justify-center">
+    <div className="flex items-center gap-2">
+      <div className="w-3 h-3 rounded-sm bg-foreground" />
+      <span className="text-sm font-display italic text-foreground">{accuracy.white}%</span>
+      <span className="text-xs text-muted-foreground">accuracy</span>
+    </div>
+    <div className="w-px h-4 bg-border" />
+    <div className="flex items-center gap-2">
+      <div className="w-3 h-3 rounded-sm bg-muted-foreground" />
+      <span className="text-sm font-display italic text-foreground">{accuracy.black}%</span>
+      <span className="text-xs text-muted-foreground">accuracy</span>
+    </div>
+  </div>
+);
+
+// Move list with classifications
+const MoveList = ({ moves }: { moves: EvaluatedMove[] }) => {
+  const significantMoves = moves.filter(
+    (m) => m.classification.type === "blunder" || m.classification.type === "mistake" || m.classification.type === "inaccuracy"
+  );
+
+  if (significantMoves.length === 0) return null;
+
+  return (
+    <div className="border border-border rounded-lg p-3 space-y-1.5">
+      <span className="text-xs uppercase tracking-[0.15em] text-muted-foreground">Engine-Flagged Moves</span>
+      {significantMoves.map((m, i) => {
+        const cfg = classificationIcons[m.classification.type];
+        return (
+          <div key={i} className="flex items-center justify-between text-xs py-1 px-2 rounded hover:bg-accent/30">
+            <div className="flex items-center gap-2">
+              <span className={`font-mono font-bold ${cfg.color}`}>{cfg.label}</span>
+              <span className="text-foreground font-mono">
+                {m.moveNumber}{m.color === "w" ? "." : "..."} {m.san}
+              </span>
+              <span className="text-muted-foreground capitalize">{m.classification.type}</span>
+            </div>
+            <span className="text-muted-foreground">
+              {m.classification.cpLoss > 0 ? `-${m.classification.cpLoss}cp` : ""}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
 const GameAnalysisModal = (props: Props) => {
   const { onClose } = props;
   const [analysis, setAnalysis] = useState<GameAnalysis | null>(null);
+  const [engineEval, setEngineEval] = useState<GameEvaluation | null>(null);
   const [loading, setLoading] = useState(true);
+  const [engineProgress, setEngineProgress] = useState<{ current: number; total: number } | null>(null);
+  const [phase, setPhase] = useState<"engine" | "ai" | "done">("engine");
   const [error, setError] = useState<string | null>(null);
   const { captureRef, downloadImage, copyShareLink } = useShareAsImage();
 
   const isRawPgn = "rawPgn" in props && !!props.rawPgn;
-
-  // Derive display info
   const pgn = isRawPgn ? props.rawPgn : props.game?.pgn;
   const gameUrl = isRawPgn ? null : props.game?.url;
 
@@ -103,7 +219,30 @@ const GameAnalysisModal = (props: Props) => {
 
   useEffect(() => {
     const analyze = async () => {
+      if (!pgn) {
+        setError("No PGN data available");
+        setLoading(false);
+        return;
+      }
+
       try {
+        // Phase 1: Stockfish engine evaluation
+        setPhase("engine");
+        let evalResult: GameEvaluation | null = null;
+        try {
+          evalResult = await evaluateGame(pgn, (current, total) => {
+            setEngineProgress({ current, total });
+          });
+          setEngineEval(evalResult);
+        } catch (engineErr: any) {
+          console.warn("Stockfish evaluation failed, continuing with AI only:", engineErr.message);
+          toast.error("Engine analysis unavailable — using AI only");
+        }
+
+        // Phase 2: AI coaching analysis
+        setPhase("ai");
+        setEngineProgress(null);
+
         const body: Record<string, any> = { pgn };
 
         if (!isRawPgn) {
@@ -116,11 +255,21 @@ const GameAnalysisModal = (props: Props) => {
           body.opponentRating = getOpponentRating(props.game, props.username);
         }
 
+        // Include engine data for AI to reference
+        if (evalResult) {
+          body.engineAnalysis = {
+            summary: evalResult.summary,
+            accuracy: evalResult.accuracy,
+            depth: 14,
+          };
+        }
+
         const { data, error: fnError } = await supabase.functions.invoke("analyze-game", { body });
 
         if (fnError) throw new Error(fnError.message);
         if (data?.error) throw new Error(data.error);
         setAnalysis(data);
+        setPhase("done");
       } catch (e: any) {
         const msg = e.message || "Failed to analyze game";
         setError(msg);
@@ -185,10 +334,38 @@ const GameAnalysisModal = (props: Props) => {
           </div>
 
           <div className="p-5 space-y-6">
+            {/* Loading states */}
             {loading && (
               <div className="flex flex-col items-center justify-center py-16 gap-3">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                <p className="text-sm text-muted-foreground font-display italic">Analyzing game with AI...</p>
+                {phase === "engine" && engineProgress && (
+                  <>
+                    <p className="text-sm text-muted-foreground font-display italic">
+                      Analyzing with Stockfish...
+                    </p>
+                    <div className="w-48 bg-accent/30 rounded-full h-1.5 overflow-hidden">
+                      <motion.div
+                        className="h-full bg-foreground/60 rounded-full"
+                        initial={{ width: "0%" }}
+                        animate={{ width: `${(engineProgress.current / engineProgress.total) * 100}%` }}
+                        transition={{ duration: 0.2 }}
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Move {engineProgress.current} / {engineProgress.total}
+                    </p>
+                  </>
+                )}
+                {phase === "engine" && !engineProgress && (
+                  <p className="text-sm text-muted-foreground font-display italic">
+                    Initializing Stockfish engine...
+                  </p>
+                )}
+                {phase === "ai" && (
+                  <p className="text-sm text-muted-foreground font-display italic">
+                    Generating AI coaching insights...
+                  </p>
+                )}
               </div>
             )}
 
@@ -198,6 +375,16 @@ const GameAnalysisModal = (props: Props) => {
               </div>
             )}
 
+            {/* Engine eval section (shows as soon as engine finishes, even while AI loads) */}
+            {engineEval && (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+                <AccuracyDisplay accuracy={engineEval.accuracy} />
+                <EvalChart moves={engineEval.moves} />
+                <MoveList moves={engineEval.moves} />
+              </motion.div>
+            )}
+
+            {/* AI coaching section */}
             {analysis && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
                 {/* Opening & Summary */}
