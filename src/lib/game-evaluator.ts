@@ -1,9 +1,10 @@
 /**
- * Evaluates all positions in a PGN using chess-api.com (Stockfish 17 NNUE).
+ * Evaluates all positions in a PGN using chess-api.com via edge function.
  * Returns evaluations, classifications, and accuracy for each move.
  */
 
 import { Chess } from "chess.js";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface MoveClassification {
   type: "blunder" | "mistake" | "inaccuracy" | "good" | "excellent" | "brilliant" | "book";
@@ -31,43 +32,8 @@ export interface GameEvaluation {
   summary: string;
 }
 
-interface ChessApiResponse {
-  eval: number;
-  winChance: number;
-  move: string;
-  san: string;
-  depth: number;
-  mate: number | null;
-  type: string;
-  text: string;
-}
-
-const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
-
-async function evalPosition(fen: string, depth: number = 16, retries = 2): Promise<ChessApiResponse> {
-  for (let attempt = 0; attempt <= retries; attempt++) {
-    const res = await fetch("https://chess-api.com/v1", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ fen, depth, maxThinkingTime: 100 }),
-    });
-    if (!res.ok) throw new Error(`chess-api HTTP error: ${res.status}`);
-    const data = await res.json();
-    if (data.type === "error") {
-      if (data.error === "HIGH_USAGE" && attempt < retries) {
-        await delay(2000 * (attempt + 1)); // back off and retry
-        continue;
-      }
-      throw new Error(data.text || data.error || "chess-api error");
-    }
-    return data;
-  }
-  throw new Error("chess-api: max retries exceeded");
-}
-
 /**
  * Classify a move based on Win% loss from the moving player's perspective.
- * Thresholds calibrated to match chess.com-style sensitivity.
  */
 function classifyMove(winBefore: number, winAfter: number): MoveClassification {
   const winProbLoss = winBefore - winAfter;
@@ -95,29 +61,56 @@ export async function evaluateGame(
   const history = chess.history({ verbose: true });
   if (history.length === 0) throw new Error("No moves found in PGN");
 
-  const evaluatedMoves: EvaluatedMove[] = [];
+  // Build all FENs (starting position + after each move)
   const replayChess = new Chess();
+  const positions: { fen: string }[] = [{ fen: replayChess.fen() }];
 
-  // Evaluate starting position
-  const startData = await evalPosition(replayChess.fen());
-  // chess-api.com winChance: >50 = white winning, <50 = black winning
-  let prevWinChance = startData.winChance;
+  for (const move of history) {
+    replayChess.move(move.san);
+    positions.push({ fen: replayChess.fen() });
+  }
+
+  // Send all positions to the edge function in batches
+  const BATCH_SIZE = 15;
+  const allResults: any[] = [];
+
+  for (let batchStart = 0; batchStart < positions.length; batchStart += BATCH_SIZE) {
+    const batch = positions.slice(batchStart, batchStart + BATCH_SIZE);
+
+    const { data, error } = await supabase.functions.invoke("chess-eval", {
+      body: { positions: batch },
+    });
+
+    if (error) throw new Error(`Engine evaluation failed: ${error.message}`);
+    if (data?.error) throw new Error(data.error);
+
+    allResults.push(...(data.results || []));
+
+    // Report progress
+    const done = Math.min(batchStart + BATCH_SIZE, positions.length);
+    onProgress?.(Math.min(done - 1, history.length), history.length);
+  }
+
+  // First result is the starting position
+  const startEval = allResults[0];
+  if (!startEval || startEval.error) {
+    throw new Error(`Failed to evaluate starting position: ${startEval?.error || "no data"}`);
+  }
+
+  let prevWinChance: number = startEval.winChance;
+  const evaluatedMoves: EvaluatedMove[] = [];
 
   for (let i = 0; i < history.length; i++) {
     const move = history[i];
-    const wasWhiteTurn = replayChess.turn() === "w";
+    const wasWhiteTurn = i % 2 === 0;
+    const evalData = allResults[i + 1]; // +1 because index 0 is starting position
 
-    replayChess.move(move.san);
-    const fen = replayChess.fen();
+    if (!evalData || evalData.error) {
+      // Skip positions that failed to evaluate
+      continue;
+    }
 
-    onProgress?.(i + 1, history.length);
-
-    // Small delay to respect chess-api.com rate limits
-    if (i > 0) await delay(200);
-    const evalData = await evalPosition(fen);
-
-    // winChance from chess-api is always from white's perspective (>50 = white winning)
-    const currWinChance = evalData.winChance;
+    const currWinChance: number = evalData.winChance;
 
     // Convert to moving player's perspective for classification
     const playerWinBefore = wasWhiteTurn ? prevWinChance : 100 - prevWinChance;
@@ -126,11 +119,11 @@ export async function evaluateGame(
     const classification = classifyMove(playerWinBefore, playerWinAfter);
 
     evaluatedMoves.push({
-      fen,
+      fen: positions[i + 1].fen,
       moveNumber: Math.floor(i / 2) + 1,
       move: move.san,
       san: move.san,
-      score: Math.round(evalData.eval * 100), // convert pawns to centipawns
+      score: Math.round(evalData.eval * 100),
       winChance: currWinChance,
       bestMove: evalData.move || null,
       bestMoveSan: evalData.san || null,
@@ -144,8 +137,7 @@ export async function evaluateGame(
   }
 
   // ── Accuracy calculation ──
-  // Uses chess.com's CAPS formula: exponential decay based on Win% loss
-  const allWinChances = [startData.winChance, ...evaluatedMoves.map((m) => m.winChance)];
+  const allWinChances = [startEval.winChance, ...evaluatedMoves.map((m) => m.winChance)];
 
   const moveAccuracy = (before: number, after: number, isWhite: boolean): number => {
     const winBefore = isWhite ? before : 100 - before;
@@ -161,9 +153,12 @@ export async function evaluateGame(
     const accs: number[] = [];
 
     for (let i = 0; i < evaluatedMoves.length; i++) {
-      const moveColor = i % 2 === 0 ? "w" : "b";
+      const moveColor = evaluatedMoves[i].color;
       if (moveColor !== color) continue;
-      accs.push(moveAccuracy(allWinChances[i], allWinChances[i + 1], isWhite));
+
+      // Find this move's index in allWinChances
+      const wcIdx = i; // evaluatedMoves[i] corresponds to allWinChances[i] (before) and allWinChances[i+1] (after)
+      accs.push(moveAccuracy(allWinChances[wcIdx], allWinChances[wcIdx + 1], isWhite));
     }
 
     if (accs.length === 0) return 100;
