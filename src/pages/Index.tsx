@@ -88,6 +88,28 @@ const Index = () => {
   const [profileCardUsername, setProfileCardUsername] = useState<string | null>(null);
 
 
+const SAMPLE_PLAYERS = [
+  { username: "hikaru", display: "Hikaru" },
+  { username: "GothamChess", display: "Gotham Chess" },
+  { username: "MagnusCarlsen", display: "Magnus Carlsen" },
+  { username: "AnishGiri", display: "Anish Giri" },
+];
+
+const PlayerAvatar = ({ username, display }: { username: string; display: string }) => {
+  const [avatar, setAvatar] = useState<string | null>(null);
+  useEffect(() => {
+    fetch(`https://api.chess.com/pub/player/${username.toLowerCase()}`)
+      .then(r => r.json())
+      .then(d => { if (d.avatar) setAvatar(d.avatar); })
+      .catch(() => {});
+  }, [username]);
+  return avatar ? (
+    <img src={avatar} alt={display} className="w-5 h-5 rounded-full object-cover" />
+  ) : (
+    <span className="w-5 h-5 rounded-full bg-muted-foreground/20 inline-block" />
+  );
+};
+
   useEffect(() => {
     if (routeUsername) setProfileCardUsername(routeUsername);
   }, [routeUsername]);
@@ -226,12 +248,7 @@ const Index = () => {
               <RevealSection className="text-center space-y-4">
                 <p className="text-xs tracking-[0.15em] uppercase text-muted-foreground">Try a sample player</p>
               <div className="flex flex-wrap justify-center gap-2">
-                  {[
-                    { username: "hikaru", display: "Hikaru", avatar: "https://images.chesscomfiles.com/uploads/v1/user/15448422.b6401265.50x50o.831ef3c4faa0.png" },
-                    { username: "GothamChess", display: "Gotham Chess", avatar: "https://images.chesscomfiles.com/uploads/v1/user/49777928.8cae6ea0.50x50o.b1a3bfe4206d.png" },
-                    { username: "MagnusCarlsen", display: "Magnus Carlsen", avatar: "https://images.chesscomfiles.com/uploads/v1/user/81726526.eb721fa8.50x50o.34a4ed4554d5.png" },
-                    { username: "AnishGiri", display: "Anish Giri", avatar: "https://images.chesscomfiles.com/uploads/v1/user/33092908.14ceca84.50x50o.77a32e9d5766.png" },
-                  ].map((player, i) => (
+                  {SAMPLE_PLAYERS.map((player, i) => (
                     <motion.button
                       key={player.username}
                       initial={{ opacity: 0, y: 12 }}
@@ -243,7 +260,7 @@ const Index = () => {
                       onClick={() => handleSearch(player.username)}
                       className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-border/60 bg-card/50 backdrop-blur-sm text-sm text-muted-foreground hover:text-foreground transition-all font-display italic"
                     >
-                      <img src={player.avatar} alt={player.display} className="w-5 h-5 rounded-full object-cover" />
+                      <PlayerAvatar username={player.username} display={player.display} />
                       {player.display}
                     </motion.button>
                   ))}
