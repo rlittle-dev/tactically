@@ -1,73 +1,74 @@
-# Welcome to your Lovable project
+# ♞ Tactically — Chess Performance Analyzer
 
-## Project info
+A sleek, real-time chess analytics dashboard that connects to the Chess.com API to deliver deep performance insights, rating trends, and AI-powered coaching recommendations.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+**[Live Demo →](https://tactically.lovable.app)**
 
-## How can I edit this code?
+## Features
 
-There are several ways of editing your application.
+- **Rating Dashboard** — View current and best ratings across Rapid, Blitz, and Bullet formats with win/loss/draw breakdowns
+- **Rating Trend Charts** — Interactive area charts tracking rating progression over recent games
+- **Recent Matches** — Scrollable feed of recent games with results, opponents, and ratings
+- **Puzzle Stats** — Puzzle rating and Puzzle Rush scores at a glance
+- **AI-Powered Analysis** — Identifies strengths, weaknesses, and recommends targeted Lichess training puzzles
+- **Fluid Animations** — Apple-inspired motion design with staggered reveals, spring physics, and glassmorphism
 
-**Use Lovable**
+## Tech Stack
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+|
+ Layer 
+|
+ Technology 
+|
+|
+-------
+|
+-----------
+|
+|
+ Frontend 
+|
+ React, TypeScript, Vite 
+|
+|
+ Styling 
+|
+ Tailwind CSS, Framer Motion 
+|
+|
+ Charts 
+|
+ Recharts 
+|
+|
+ Backend 
+|
+ Supabase Edge Functions 
+|
+|
+ AI 
+|
+ Gemini 3 Flash (via Lovable AI) 
+|
+|
+ Data Source 
+|
+ Chess.com Public API 
+|
 
-Changes made via Lovable will be committed automatically to this repo.
+## How It Works
 
-**Use your preferred IDE**
+1. Enter any Chess.com username
+2. The app fetches profile data, stats, and recent games in parallel
+3. Rating cards and trend charts render instantly
+4. An AI coach analyzes game patterns and surfaces actionable insights
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## Design
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+Dark gothic-modern aesthetic with a monochrome palette, Cormorant Garamond serif typography, and geometric chess-pattern backgrounds. Designed for clarity and elegance.
 
-Follow these steps:
+## Getting Started
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+npm install
 npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
