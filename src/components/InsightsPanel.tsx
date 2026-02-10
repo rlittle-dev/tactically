@@ -3,7 +3,7 @@ import { ChessStats, RecentGame } from "@/lib/chess-api";
 import { AIAnalysis, fetchAIAnalysis } from "@/lib/ai-analysis";
 import {
   AlertTriangle, Info, CheckCircle, Loader2, ExternalLink,
-  Swords, Target, Crown, Clock, Puzzle, Shield, Sparkles,
+  Swords, Target, Crown, Clock, Puzzle, Shield, Sparkles, Play,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -81,22 +81,17 @@ const InsightsPanel = ({ stats, games, username }: Props) => {
           animate={{ opacity: 1, scale: 1 }}
           className="bg-card/80 backdrop-blur-xl border border-border rounded-xl p-8 flex flex-col items-center gap-4 text-center"
         >
-          <div className="space-y-1">
-            <p className="text-sm text-muted-foreground font-display italic">
-              {games.length} games loaded across {gamesWithPgn.length} with move data
-            </p>
-            <p className="text-xs text-muted-foreground">
-              Stockfish will deep-analyze 5 games · AI reviews all {games.length} for patterns
-            </p>
-          </div>
+          <p className="text-xs tracking-wide text-muted-foreground">
+            <span className="font-display italic">{games.length}</span> games found · <span className="font-display italic">{gamesWithPgn.length}</span> with move data · engine analyzes top <span className="font-display italic">5</span>
+          </p>
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={startAnalysis}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-foreground text-background text-sm font-display italic hover:opacity-90 transition-opacity"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-lg border border-border bg-card hover:border-foreground/30 text-sm text-muted-foreground hover:text-foreground transition-colors font-display italic"
           >
-            <Sparkles className="h-4 w-4" />
-            Start Profile Breakdown
+            <Play className="h-3.5 w-3.5" />
+            Start Breakdown
           </motion.button>
         </motion.div>
       )}
