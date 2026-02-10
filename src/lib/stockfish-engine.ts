@@ -44,15 +44,14 @@ export function classifyMove(prevScore: number, currentScore: number, isWhiteTur
     : currentScore - prevScore;
 
   // Hybrid thresholds: use both win probability loss AND centipawn loss
-  // to catch bad moves that shallow depth might undervalue in win%
   const cpLossAbs = Math.max(0, delta);
 
-  // Blunder: ≥15% win prob loss OR ≥150cp loss
-  if (winProbLoss >= 15 || cpLossAbs >= 150) return { type: "blunder", cpLoss: cpLossAbs, winProbLoss };
-  // Mistake: ≥8% win prob loss OR ≥75cp loss
-  if (winProbLoss >= 8 || cpLossAbs >= 75) return { type: "mistake", cpLoss: cpLossAbs, winProbLoss };
-  // Inaccuracy: ≥3% win prob loss OR ≥35cp loss
-  if (winProbLoss >= 3 || cpLossAbs >= 35) return { type: "inaccuracy", cpLoss: cpLossAbs, winProbLoss };
+  // Blunder: ≥15% win prob loss OR ≥200cp loss
+  if (winProbLoss >= 15 || cpLossAbs >= 200) return { type: "blunder", cpLoss: cpLossAbs, winProbLoss };
+  // Mistake: ≥8% win prob loss OR ≥100cp loss
+  if (winProbLoss >= 8 || cpLossAbs >= 100) return { type: "mistake", cpLoss: cpLossAbs, winProbLoss };
+  // Inaccuracy: ≥4% win prob loss OR ≥50cp loss
+  if (winProbLoss >= 4 || cpLossAbs >= 50) return { type: "inaccuracy", cpLoss: cpLossAbs, winProbLoss };
   if (winProbLoss <= -5) return { type: "brilliant", cpLoss: delta, winProbLoss };
   if (winProbLoss <= -1) return { type: "excellent", cpLoss: delta, winProbLoss };
   return { type: "good", cpLoss: cpLossAbs, winProbLoss };
