@@ -21,7 +21,7 @@ export interface GameEvaluation {
 export async function evaluateGame(
   pgn: string,
   onProgress?: (current: number, total: number) => void,
-  depth: number = 14
+  depth: number = 18
 ): Promise<GameEvaluation> {
   const chess = new Chess();
 
@@ -120,14 +120,14 @@ export async function evaluateGame(
 
   const weights = windows.map((w) => Math.max(0.5, Math.min(12, stddev(w))));
 
-  // Per-move accuracy (Lichess formula with +1 uncertainty bonus)
+  // Per-move accuracy (Lichess formula, no inflation bonus)
   const moveAccuracyFromWinPercents = (before: number, after: number, isWhite: boolean) => {
     const winBefore = isWhite ? before : 100 - before;
     const winAfter = isWhite ? after : 100 - after;
     if (winAfter >= winBefore) return 100;
     const winDiff = winBefore - winAfter;
     const raw = 103.1668100711649 * Math.exp(-0.04354415386753951 * winDiff) + -3.166924740191411;
-    return Math.max(0, Math.min(100, raw + 1)); // +1 uncertainty bonus
+    return Math.max(0, Math.min(100, raw));
   };
 
   const calcGameAccuracy = (color: "w" | "b") => {
