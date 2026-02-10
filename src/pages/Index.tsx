@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { Clock, Zap, Gauge, RotateCcw, Github, Linkedin, TrendingUp, Brain, History, Share2, FileText } from "lucide-react";
+import { Clock, Zap, Gauge, RotateCcw, Github, Linkedin, TrendingUp, Brain, History, Share2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import UsernameSearch from "@/components/UsernameSearch";
 import ProfileHeader from "@/components/ProfileHeader";
@@ -11,13 +11,13 @@ import RatingChart from "@/components/RatingChart";
 import InsightsPanel from "@/components/InsightsPanel";
 import PgnUpload from "@/components/PgnUpload";
 import ProfileCardModal from "@/components/ProfileCardModal";
-import {
-  ChessProfile, ChessStats, RecentGame,
-  fetchProfile, fetchStats, fetchRecentGames,
-} from "@/lib/chess-api";
-
+import { ChessProfile, ChessStats, RecentGame, fetchProfile, fetchStats, fetchRecentGames } from "@/lib/chess-api";
 const Index = () => {
-  const { username: routeUsername } = useParams<{ username: string }>();
+  const {
+    username: routeUsername
+  } = useParams<{
+    username: string;
+  }>();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,7 +33,6 @@ const Index = () => {
       setProfileCardUsername(routeUsername);
     }
   }, [routeUsername]);
-
   const handleSearch = async (name: string) => {
     setLoading(true);
     setError(null);
@@ -42,9 +41,7 @@ const Index = () => {
     setGames([]);
     setUsername(name);
     try {
-      const [p, s, g] = await Promise.all([
-        fetchProfile(name), fetchStats(name), fetchRecentGames(name),
-      ]);
+      const [p, s, g] = await Promise.all([fetchProfile(name), fetchStats(name), fetchRecentGames(name)]);
       setProfile(p);
       setStats(s);
       setGames(g);
@@ -54,7 +51,6 @@ const Index = () => {
       setLoading(false);
     }
   };
-
   const handleReset = () => {
     setProfile(null);
     setStats(null);
@@ -62,125 +58,139 @@ const Index = () => {
     setUsername("");
     setError(null);
   };
-
   const showLanding = !profile && !loading;
-
-  return (
-    <div className="min-h-screen bg-background relative flex flex-col">
+  return <div className="min-h-screen bg-background relative flex flex-col">
       {/* Ambient glow + chess pattern contained to main area */}
-      <div className="absolute inset-0 bottom-auto pointer-events-none" style={{ bottom: 0 }}>
-        <div className="chess-pattern" style={{ position: "absolute", inset: 0 }} />
-        <motion.div
-          animate={{
-            opacity: [0.03, 0.06, 0.03],
-            scale: [1, 1.1, 1],
-          }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full"
-          style={{ background: "radial-gradient(circle, hsl(0 0% 100% / 0.06) 0%, transparent 70%)" }}
-        />
+      <div className="absolute inset-0 bottom-auto pointer-events-none" style={{
+      bottom: 0
+    }}>
+        <div className="chess-pattern" style={{
+        position: "absolute",
+        inset: 0
+      }} />
+        <motion.div animate={{
+        opacity: [0.03, 0.06, 0.03],
+        scale: [1, 1.1, 1]
+      }} transition={{
+        duration: 8,
+        repeat: Infinity,
+        ease: "easeInOut"
+      }} className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full" style={{
+        background: "radial-gradient(circle, hsl(0 0% 100% / 0.06) 0%, transparent 70%)"
+      }} />
       </div>
 
       {/* Support Banner */}
       <div className="bg-accent/60 backdrop-blur-sm border-b border-border/50 text-center py-2 px-4 text-xs text-muted-foreground relative z-50">
         <span>Support this project — USDT (ERC-20): </span>
-        <button
-          onClick={() => {
-            navigator.clipboard.writeText("0x9F213F387cD443A26c3a48c7B9816A4c067E36DE");
-            import("sonner").then(({ toast }) => toast.success("Address copied to clipboard!"));
-          }}
-          className="font-mono text-foreground hover:underline underline-offset-2 transition-colors"
-        >
+        <button onClick={() => {
+        navigator.clipboard.writeText("0x9F213F387cD443A26c3a48c7B9816A4c067E36DE");
+        import("sonner").then(({
+          toast
+        }) => toast.success("Address copied to clipboard!"));
+      }} className="font-mono text-foreground hover:underline underline-offset-2 transition-colors">
           0x9F213F...6DE
         </button>
       </div>
 
       {/* Header */}
-      <motion.header
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="border-b border-border/50 backdrop-blur-xl bg-background/60 sticky top-0 z-50"
-      >
+      <motion.header initial={{
+      opacity: 0,
+      y: -10
+    }} animate={{
+      opacity: 1,
+      y: 0
+    }} transition={{
+      duration: 0.5
+    }} className="border-b border-border/50 backdrop-blur-xl bg-background/60 sticky top-0 z-50">
         <div className="container max-w-5xl mx-auto px-4 py-5 flex items-center justify-between">
-          <motion.button
-            onClick={handleReset}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className="flex items-center gap-3 hover:opacity-80 transition-opacity"
-          >
+          <motion.button onClick={handleReset} whileHover={{
+          scale: 1.02
+        }} whileTap={{
+          scale: 0.98
+        }} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
             <span className="text-foreground text-2xl">♞</span>
             <h1 className="text-xl font-display italic font-medium text-foreground tracking-wide">Tactically</h1>
           </motion.button>
           <AnimatePresence mode="wait">
-            {profile ? (
-              <motion.button
-                key="reset"
-                initial={{ opacity: 0, x: 10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 10 }}
-                onClick={handleReset}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
+            {profile ? <motion.button key="reset" initial={{
+            opacity: 0,
+            x: 10
+          }} animate={{
+            opacity: 1,
+            x: 0
+          }} exit={{
+            opacity: 0,
+            x: 10
+          }} onClick={handleReset} whileHover={{
+            scale: 1.05
+          }} whileTap={{
+            scale: 0.95
+          }} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
                 <RotateCcw className="h-4 w-4" />
                 New Analysis
-              </motion.button>
-            ) : (
-              <motion.p
-                key="subtitle"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="text-xs tracking-[0.2em] uppercase text-muted-foreground hidden sm:block"
-              >
+              </motion.button> : <motion.p key="subtitle" initial={{
+            opacity: 0
+          }} animate={{
+            opacity: 1
+          }} exit={{
+            opacity: 0
+          }} className="text-xs tracking-[0.2em] uppercase text-muted-foreground hidden sm:block">
                 Chess Performance Analyzer
-              </motion.p>
-            )}
+              </motion.p>}
           </AnimatePresence>
         </div>
       </motion.header>
 
       <main className="container max-w-5xl mx-auto px-4 py-16 relative z-10">
         <AnimatePresence mode="wait">
-          {showLanding && (
-            <motion.div
-              key="hero"
-              initial={{ opacity: 0, y: 30, filter: "blur(12px)" }}
-              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-              exit={{ opacity: 0, y: -20, filter: "blur(8px)" }}
-              transition={{ duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
-              className="text-center mb-12 space-y-5"
-            >
+          {showLanding && <motion.div key="hero" initial={{
+          opacity: 0,
+          y: 30,
+          filter: "blur(12px)"
+        }} animate={{
+          opacity: 1,
+          y: 0,
+          filter: "blur(0px)"
+        }} exit={{
+          opacity: 0,
+          y: -20,
+          filter: "blur(8px)"
+        }} transition={{
+          duration: 0.7,
+          ease: [0.25, 0.46, 0.45, 0.94]
+        }} className="text-center mb-12 space-y-5">
               <h2 className="text-5xl sm:text-7xl font-display italic font-light text-foreground leading-[1.1]">
                 Analyze Your <span className="text-gradient font-medium">Chess</span>, Tactically
               </h2>
               <p className="text-muted-foreground text-base max-w-sm mx-auto leading-relaxed">
                 Enter your Chess.com username for a full breakdown of your strengths, weaknesses & performance.
               </p>
-            </motion.div>
-          )}
+            </motion.div>}
         </AnimatePresence>
 
-        <motion.div
-          layout
-          transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          className="mb-12"
-        >
+        <motion.div layout transition={{
+        type: "spring",
+        stiffness: 300,
+        damping: 30
+      }} className="mb-12">
           <UsernameSearch onSearch={handleSearch} loading={loading} />
         </motion.div>
 
         <AnimatePresence>
-          {showLanding && (
-            <motion.div
-              key="landing-features"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="space-y-10 mb-12"
-            >
+          {showLanding && <motion.div key="landing-features" initial={{
+          opacity: 0,
+          y: 20
+        }} animate={{
+          opacity: 1,
+          y: 0
+        }} exit={{
+          opacity: 0,
+          y: -10
+        }} transition={{
+          duration: 0.5,
+          delay: 0.2
+        }} className="space-y-10 mb-12">
               {/* PGN Upload */}
               <div className="max-w-lg mx-auto">
                 <PgnUpload />
@@ -190,68 +200,72 @@ const Index = () => {
               <div className="text-center space-y-3">
                 <p className="text-xs tracking-[0.15em] uppercase text-muted-foreground">Try a sample player</p>
                 <div className="flex flex-wrap justify-center gap-2">
-                  {["hikaru", "GothamChess", "MagnusCarlsen", "AnishGiri"].map((name) => (
-                    <motion.button
-                      key={name}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => handleSearch(name)}
-                      className="px-4 py-2 rounded-lg border border-border/60 bg-card/50 backdrop-blur-sm text-sm text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors font-display italic"
-                    >
+                  {["hikaru", "GothamChess", "MagnusCarlsen", "AnishGiri"].map(name => <motion.button key={name} whileHover={{
+                scale: 1.05
+              }} whileTap={{
+                scale: 0.95
+              }} onClick={() => handleSearch(name)} className="px-4 py-2 rounded-lg border border-border/60 bg-card/50 backdrop-blur-sm text-sm text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors font-display italic">
                       {name}
-                    </motion.button>
-                  ))}
+                    </motion.button>)}
                 </div>
               </div>
 
               {/* Feature Highlights */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl mx-auto">
-                {[
-                  { icon: <TrendingUp className="h-5 w-5" />, title: "Rating Trends", desc: "Track your Elo progression across all time controls" },
-                  { icon: <Brain className="h-5 w-5" />, title: "AI Coaching", desc: "Get personalized insights and training recommendations" },
-                  { icon: <History className="h-5 w-5" />, title: "Game History", desc: "Review recent matches with detailed breakdowns" },
-                ].map((f) => (
-                  <div key={f.title} className="flex flex-col items-center text-center gap-2 p-5 rounded-xl border border-border/40 bg-card/30 backdrop-blur-sm">
+                {[{
+              icon: <TrendingUp className="h-5 w-5" />,
+              title: "Rating Trends",
+              desc: "Track your Elo progression across all time controls"
+            }, {
+              icon: <Brain className="h-5 w-5" />,
+              title: "AI Coaching",
+              desc: "Get personalized insights and training recommendations"
+            }, {
+              icon: <History className="h-5 w-5" />,
+              title: "Game History",
+              desc: "Review recent matches with detailed breakdowns"
+            }].map(f => <div key={f.title} className="flex flex-col items-center text-center gap-2 p-5 rounded-xl border border-border/40 bg-card/30 backdrop-blur-sm">
                     <div className="text-muted-foreground">{f.icon}</div>
                     <h3 className="text-sm font-display italic font-medium text-foreground">{f.title}</h3>
                     <p className="text-xs text-muted-foreground leading-relaxed">{f.desc}</p>
-                  </div>
-                ))}
+                  </div>)}
               </div>
-            </motion.div>
-          )}
+            </motion.div>}
         </AnimatePresence>
 
         <AnimatePresence>
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="text-center text-destructive bg-destructive/10 border border-destructive/30 rounded-xl p-4 max-w-md mx-auto"
-            >
+          {error && <motion.div initial={{
+          opacity: 0,
+          scale: 0.95
+        }} animate={{
+          opacity: 1,
+          scale: 1
+        }} exit={{
+          opacity: 0,
+          scale: 0.95
+        }} className="text-center text-destructive bg-destructive/10 border border-destructive/30 rounded-xl p-4 max-w-md mx-auto">
               {error}
-            </motion.div>
-          )}
+            </motion.div>}
         </AnimatePresence>
 
-        {profile && stats && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
-            className="space-y-6"
-          >
+        {profile && stats && <motion.div initial={{
+        opacity: 0
+      }} animate={{
+        opacity: 1
+      }} transition={{
+        duration: 0.3
+      }} className="space-y-6">
             <div className="flex items-center justify-between">
               <ProfileHeader profile={profile} />
-              <motion.button
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setProfileCardUsername(username)}
-                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-lg border border-border/60 hover:border-foreground/30 shrink-0"
-              >
+              <motion.button initial={{
+            opacity: 0
+          }} animate={{
+            opacity: 1
+          }} whileHover={{
+            scale: 1.05
+          }} whileTap={{
+            scale: 0.95
+          }} onClick={() => setProfileCardUsername(username)} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-lg border border-border/60 hover:border-foreground/30 shrink-0">
                 <Share2 className="h-4 w-4" />
                 Share Card
               </motion.button>
@@ -274,8 +288,7 @@ const Index = () => {
             </div>
 
             <InsightsPanel stats={stats} games={games} username={username} />
-          </motion.div>
-        )}
+          </motion.div>}
       </main>
 
       <footer className="relative z-10 border-t border-border/50 bg-background mt-auto">
@@ -289,23 +302,16 @@ const Index = () => {
             </a>
           </div>
           <Link to="/docs" className="flex items-center gap-1.5 hover:text-foreground transition-colors">
-            <FileText className="h-4 w-4" />
+            
             Documentation
           </Link>
         </div>
       </footer>
 
-      {profileCardUsername && (
-        <ProfileCardModal
-          username={profileCardUsername}
-          onClose={() => {
-            setProfileCardUsername(null);
-            if (routeUsername) navigate("/");
-          }}
-        />
-      )}
-    </div>
-  );
+      {profileCardUsername && <ProfileCardModal username={profileCardUsername} onClose={() => {
+      setProfileCardUsername(null);
+      if (routeUsername) navigate("/");
+    }} />}
+    </div>;
 };
-
 export default Index;
