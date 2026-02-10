@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Clock, Zap, Gauge, RotateCcw, Github, Linkedin } from "lucide-react";
+import { Clock, Zap, Gauge, RotateCcw, Github, Linkedin, TrendingUp, Brain, History } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import UsernameSearch from "@/components/UsernameSearch";
 import ProfileHeader from "@/components/ProfileHeader";
@@ -143,6 +143,52 @@ const Index = () => {
         >
           <UsernameSearch onSearch={handleSearch} loading={loading} />
         </motion.div>
+
+        <AnimatePresence>
+          {showLanding && (
+            <motion.div
+              key="landing-features"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="space-y-10 mb-12"
+            >
+              {/* Sample Players */}
+              <div className="text-center space-y-3">
+                <p className="text-xs tracking-[0.15em] uppercase text-muted-foreground">Try a sample player</p>
+                <div className="flex flex-wrap justify-center gap-2">
+                  {["hikaru", "GothamChess", "MagnusCarlsen", "DanielNaroditsky"].map((name) => (
+                    <motion.button
+                      key={name}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => handleSearch(name)}
+                      className="px-4 py-2 rounded-lg border border-border/60 bg-card/50 backdrop-blur-sm text-sm text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors font-display italic"
+                    >
+                      {name}
+                    </motion.button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Feature Highlights */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl mx-auto">
+                {[
+                  { icon: <TrendingUp className="h-5 w-5" />, title: "Rating Trends", desc: "Track your Elo progression across all time controls" },
+                  { icon: <Brain className="h-5 w-5" />, title: "AI Coaching", desc: "Get personalized insights and training recommendations" },
+                  { icon: <History className="h-5 w-5" />, title: "Game History", desc: "Review recent matches with detailed breakdowns" },
+                ].map((f) => (
+                  <div key={f.title} className="flex flex-col items-center text-center gap-2 p-5 rounded-xl border border-border/40 bg-card/30 backdrop-blur-sm">
+                    <div className="text-muted-foreground">{f.icon}</div>
+                    <h3 className="text-sm font-display italic font-medium text-foreground">{f.title}</h3>
+                    <p className="text-xs text-muted-foreground leading-relaxed">{f.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <AnimatePresence>
           {error && (
