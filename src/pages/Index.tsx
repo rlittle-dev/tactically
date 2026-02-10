@@ -280,15 +280,14 @@ const Index = () => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-              <div className="lg:col-span-3">
+              <div className="lg:col-span-3 space-y-4">
                 <RatingChart games={games} username={username} stats={stats} />
+                <TopOpenings games={games} username={username} />
               </div>
               <div className="lg:col-span-2">
                 <RecentGames games={games} username={username} />
               </div>
             </div>
-
-            <TopOpenings games={games} username={username} />
 
             <InsightsPanel stats={stats} games={games} username={username} />
           </motion.div>}
