@@ -154,7 +154,7 @@ const Index = () => {
               className="text-center mb-12 space-y-5"
             >
               <h2 className="text-5xl sm:text-7xl font-display italic font-light text-foreground leading-[1.1]">
-                Analyze Your <span className="text-gradient font-medium">Chess</span>
+                Analyze Your <span className="text-gradient font-medium">Chess</span>, Tactically
               </h2>
               <p className="text-muted-foreground text-base max-w-sm mx-auto leading-relaxed">
                 Enter your Chess.com username for a full breakdown of your strengths, weaknesses & performance.
