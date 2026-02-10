@@ -136,25 +136,30 @@ export async function evaluateGame(
     prevWinChance = currWinChance;
   }
 
-  // ── Accuracy calculation ──
-  const allWinChances = [startEval.winChance, ...evaluatedMoves.map((m) => m.winChance)];
+  // ── Accuracy calculation using centipawn loss (position-independent) ──
+  // CP loss doesn't compress at extremes like WP does, so winning/losing
+  // doesn't bias the accuracy score.
+  const allScores = [
+    Math.round(startEval.eval * 100), // convert to centipawns
+    ...evaluatedMoves.map((m) => m.score),
+  ];
 
-  // CAPS2-style per-move accuracy with very steep penalties
-  // Chess.com typically gives 800s ~40-65%, GMs ~85-95%
-  // We use a steep sigmoid-based curve centered around small WP losses
-  const moveAccuracy = (before: number, after: number, isWhite: boolean): number => {
-    const winBefore = isWhite ? before : 100 - before;
-    const winAfter = isWhite ? after : 100 - after;
+  const moveAccuracy = (cpBefore: number, cpAfter: number, isWhite: boolean): number => {
+    // Convert to moving player's perspective
+    const playerBefore = isWhite ? cpBefore : -cpBefore;
+    const playerAfter = isWhite ? cpAfter : -cpAfter;
     
-    const winDiff = winBefore - winAfter;
+    const cpLoss = playerBefore - playerAfter;
     
-    // Near-perfect moves: matched or very close to engine
-    if (winDiff <= 0.3) return 100;
-    if (winDiff <= 0.8) return 97;
+    // If the move maintained or improved position
+    if (cpLoss <= 5) return 100;    // ≤5cp loss = perfect
+    if (cpLoss <= 10) return 96;    // ~0.1 pawn
+    if (cpLoss <= 20) return 88;    // ~0.2 pawns
     
-    // Use a steep exponential that punishes even small inaccuracies hard
-    // 1% → 90, 2% → 72, 3% → 55, 5% → 30, 8% → 10, 10% → 4, 15%+ → ~0
-    const raw = 103.1668 * Math.exp(-0.17 * winDiff) - 3.1669;
+    // Steep exponential decay for real mistakes
+    // 30cp → 72, 50cp → 46, 80cp → 21, 100cp → 12, 150cp → 3, 200cp+ → ~0
+    // This matches chess.com ranges: 800s ≈ 40-65%, GMs ≈ 85-95%
+    const raw = 113.0 * Math.exp(-0.0165 * cpLoss) - 13.0;
     return Math.max(0, Math.min(100, raw));
   };
 
@@ -166,15 +171,13 @@ export async function evaluateGame(
       const moveColor = evaluatedMoves[i].color;
       if (moveColor !== color) continue;
 
-      const wcIdx = i;
-      accs.push(moveAccuracy(allWinChances[wcIdx], allWinChances[wcIdx + 1], isWhite));
+      const scoreIdx = i;
+      accs.push(moveAccuracy(allScores[scoreIdx], allScores[scoreIdx + 1], isWhite));
     }
 
     if (accs.length === 0) return 100;
     
-    // Harmonic mean: heavily penalizes bad moves (like chess.com CAPS2)
-    // A single 0% accuracy move can drag the whole game down
-    // Add small epsilon to avoid division by zero
+    // Harmonic mean: heavily penalizes bad moves
     const epsilon = 0.5;
     const harmonicSum = accs.reduce((sum, a) => sum + 1 / (a + epsilon), 0);
     const harmonicMean = accs.length / harmonicSum - epsilon;
