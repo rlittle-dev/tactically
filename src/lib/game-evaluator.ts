@@ -152,14 +152,14 @@ export async function evaluateGame(
     const cpLoss = playerBefore - playerAfter;
     
     // If the move maintained or improved position
-    if (cpLoss <= 5) return 100;    // ≤5cp loss = perfect
-    if (cpLoss <= 10) return 96;    // ~0.1 pawn
-    if (cpLoss <= 20) return 88;    // ~0.2 pawns
+    if (cpLoss <= 5) return 100;    // ≤5cp = engine-level
+    if (cpLoss <= 15) return 95;    // ~0.1 pawn = excellent
+    if (cpLoss <= 25) return 87;    // ~0.2 pawns = good
     
-    // Steep exponential decay for real mistakes
-    // 30cp → 72, 50cp → 46, 80cp → 21, 100cp → 12, 150cp → 3, 200cp+ → ~0
-    // This matches chess.com ranges: 800s ≈ 40-65%, GMs ≈ 85-95%
-    const raw = 113.0 * Math.exp(-0.0165 * cpLoss) - 13.0;
+    // Balanced exponential decay for meaningful mistakes
+    // 30cp → 80, 50cp → 60, 75cp → 42, 100cp → 28, 150cp → 12, 200cp → 5, 300cp+ → ~0
+    // Targets: 800 ≈ 45-65%, 1500 ≈ 65-80%, GM ≈ 85-95%
+    const raw = 103.1668 * Math.exp(-0.0085 * cpLoss) - 3.1669;
     return Math.max(0, Math.min(100, raw));
   };
 
@@ -177,12 +177,12 @@ export async function evaluateGame(
 
     if (accs.length === 0) return 100;
     
-    // Harmonic mean: heavily penalizes bad moves
-    const epsilon = 0.5;
-    const harmonicSum = accs.reduce((sum, a) => sum + 1 / (a + epsilon), 0);
-    const harmonicMean = accs.length / harmonicSum - epsilon;
+    // Weighted arithmetic mean with quadratic penalty
+    // Squares the values so bad moves pull the average down, but not as extreme as harmonic
+    const weightedSum = accs.reduce((sum, a) => sum + Math.pow(a / 100, 2), 0);
+    const weightedAvg = Math.sqrt(weightedSum / accs.length) * 100;
     
-    return Math.round(Math.max(0, Math.min(100, harmonicMean)));
+    return Math.round(Math.max(0, Math.min(100, weightedAvg)));
   };
 
   const accuracy = {
