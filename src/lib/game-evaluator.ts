@@ -42,14 +42,27 @@ interface ChessApiResponse {
   text: string;
 }
 
-async function evalPosition(fen: string, depth: number = 16): Promise<ChessApiResponse> {
-  const res = await fetch("https://chess-api.com/v1", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ fen, depth, maxThinkingTime: 100 }),
-  });
-  if (!res.ok) throw new Error(`chess-api error: ${res.status}`);
-  return res.json();
+const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+async function evalPosition(fen: string, depth: number = 16, retries = 2): Promise<ChessApiResponse> {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const res = await fetch("https://chess-api.com/v1", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fen, depth, maxThinkingTime: 100 }),
+    });
+    if (!res.ok) throw new Error(`chess-api HTTP error: ${res.status}`);
+    const data = await res.json();
+    if (data.type === "error") {
+      if (data.error === "HIGH_USAGE" && attempt < retries) {
+        await delay(2000 * (attempt + 1)); // back off and retry
+        continue;
+      }
+      throw new Error(data.text || data.error || "chess-api error");
+    }
+    return data;
+  }
+  throw new Error("chess-api: max retries exceeded");
 }
 
 /**
@@ -99,6 +112,8 @@ export async function evaluateGame(
 
     onProgress?.(i + 1, history.length);
 
+    // Small delay to respect chess-api.com rate limits
+    if (i > 0) await delay(200);
     const evalData = await evalPosition(fen);
 
     // winChance from chess-api is always from white's perspective (>50 = white winning)
