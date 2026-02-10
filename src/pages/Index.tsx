@@ -81,6 +81,20 @@ const Index = () => {
         />
       </div>
 
+      {/* Support Banner */}
+      <div className="bg-accent/60 backdrop-blur-sm border-b border-border/50 text-center py-2 px-4 text-xs text-muted-foreground relative z-50">
+        <span>Support this project — USDT (ERC-20): </span>
+        <button
+          onClick={() => {
+            navigator.clipboard.writeText("0x9F213F387cD443A26c3a48c7B9816A4c067E36DE");
+            import("sonner").then(({ toast }) => toast.success("Address copied to clipboard!"));
+          }}
+          className="font-mono text-foreground hover:underline underline-offset-2 transition-colors"
+        >
+          0x9F213F...6DE
+        </button>
+      </div>
+
       {/* Header */}
       <motion.header
         initial={{ opacity: 0, y: -10 }}
