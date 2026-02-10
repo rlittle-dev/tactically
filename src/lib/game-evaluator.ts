@@ -48,9 +48,11 @@ export async function evaluateGame(
   // Reset board to starting position
   const replayChess = new Chess();
 
-  // Evaluate starting position first
+  // Evaluate starting position first (white to move, so score is already from white's perspective)
   const startEval = await engine.evaluate(replayChess.fen(), depth);
-  let prevScore = startEval.score;
+  // Stockfish returns score from side-to-move's perspective.
+  // Normalize all scores to white's perspective for consistent comparison.
+  let prevScore = startEval.score; // starting pos is white's turn, so already white's perspective
 
   for (let i = 0; i < history.length; i++) {
     const move = history[i];
@@ -63,14 +65,19 @@ export async function evaluateGame(
 
     const evalResult = await engine.evaluate(fen, depth);
 
-    const classification = classifyMove(prevScore, evalResult.score, wasWhiteTurn);
+    // Stockfish scores are from side-to-move's perspective.
+    // After white moves, it's black's turn, so negate to get white's perspective.
+    // After black moves, it's white's turn, so score is already white's perspective.
+    const normalizedScore = wasWhiteTurn ? -evalResult.score : evalResult.score;
+
+    const classification = classifyMove(prevScore, normalizedScore, wasWhiteTurn);
 
     evaluatedMoves.push({
       fen,
       moveNumber: Math.floor(i / 2) + 1,
       move: move.san,
       san: move.san,
-      score: evalResult.score,
+      score: normalizedScore,
       bestMove: evalResult.bestMove,
       depth: evalResult.depth,
       mate: evalResult.mate,
@@ -78,7 +85,7 @@ export async function evaluateGame(
       color: wasWhiteTurn ? "w" : "b",
     });
 
-    prevScore = evalResult.score;
+    prevScore = normalizedScore;
   }
 
   engine.destroy();
