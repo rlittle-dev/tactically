@@ -47,36 +47,25 @@ async function batchEngineAnalysis(
     return { perGame: [], aggregate: "Engine analysis unavailable." };
   }
 
-  // Aggregate stats across all evaluated games
-  const allMoves = results.flatMap((r) => r.eval.moves);
-  const whiteMoves = allMoves.filter((m) => m.color === "w");
-  const blackMoves = allMoves.filter((m) => m.color === "b");
-
-  const countType = (moves: typeof allMoves, type: string) =>
-    moves.filter((m) => m.classification.type === type).length;
-
-  const avgAccWhite = results.length > 0
-    ? Math.round(results.reduce((s, r) => s + r.eval.accuracy.white, 0) / results.length)
-    : 0;
-  const avgAccBlack = results.length > 0
-    ? Math.round(results.reduce((s, r) => s + r.eval.accuracy.black, 0) / results.length)
-    : 0;
-
   const lines = [
-    `Stockfish engine analysis of ${results.length} recent games (depth 10):`,
-    `Average accuracy — White: ${avgAccWhite}%, Black: ${avgAccBlack}%`,
-    `Total blunders: ${countType(allMoves, "blunder")}, mistakes: ${countType(allMoves, "mistake")}, inaccuracies: ${countType(allMoves, "inaccuracy")}`,
+    `Stockfish engine analysis of ${results.length} recent games (depth 16):`,
     `Per-game breakdown:`,
   ];
 
   for (let i = 0; i < results.length; i++) {
     const r = results[i];
-    const blunders = r.eval.moves.filter((m) => m.classification.type === "blunder");
+    // Find big eval swings (≥1 pawn loss)
+    const bigErrors = r.eval.moves.filter((m, idx) => {
+      if (idx === 0) return false;
+      const prevScore = idx > 0 ? r.eval.moves[idx - 1].score : 0;
+      const cpBefore = m.color === "w" ? prevScore : -prevScore;
+      const cpAfter = m.color === "w" ? m.score : -m.score;
+      return (cpBefore - cpAfter) >= 100;
+    });
     lines.push(
-      `  Game ${i + 1}: White ${r.eval.accuracy.white}% / Black ${r.eval.accuracy.black}% accuracy, ` +
-      `${blunders.length} blunders, ${r.eval.moves.filter((m) => m.classification.type === "mistake").length} mistakes` +
-      (blunders.length > 0
-        ? ` — blunders at: ${blunders.map((b) => `${b.moveNumber}${b.color === "w" ? "." : "..."} ${b.san}`).join(", ")}`
+      `  Game ${i + 1}: ${bigErrors.length} significant errors (≥1 pawn loss)` +
+      (bigErrors.length > 0
+        ? ` — at: ${bigErrors.map((b) => `${b.moveNumber}${b.color === "w" ? "." : "..."} ${b.san}`).join(", ")}`
         : "")
     );
   }

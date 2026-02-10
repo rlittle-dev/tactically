@@ -69,24 +69,14 @@ function extractPgnHeader(pgn: string, header: string): string | null {
   return match ? match[1] : null;
 }
 
-const classificationIcons: Record<string, { label: string; color: string }> = {
-  brilliant: { label: "!!", color: "text-cyan-400" },
-  blunder: { label: "??", color: "text-red-500" },
-  mistake: { label: "?", color: "text-orange-400" },
-  inaccuracy: { label: "?!", color: "text-yellow-400" },
-  good: { label: "", color: "text-muted-foreground" },
-  excellent: { label: "!", color: "text-emerald-400" },
-  book: { label: "📖", color: "text-blue-400" },
-};
 
 // Eval chart component
 const EvalChart = ({ moves }: { moves: EvaluatedMove[] }) => {
   const data = moves.map((m, i) => ({
     index: i,
     label: `${m.moveNumber}${m.color === "w" ? "." : "..."} ${m.san}`,
-    score: Math.max(-500, Math.min(500, m.score)) / 100, // Clamp to ±5 pawns
+    score: Math.max(-500, Math.min(500, m.score)) / 100,
     rawScore: m.score,
-    classification: m.classification.type,
   }));
 
   return (
@@ -134,54 +124,6 @@ const EvalChart = ({ moves }: { moves: EvaluatedMove[] }) => {
   );
 };
 
-// Accuracy display
-const AccuracyDisplay = ({ accuracy }: { accuracy: { white: number; black: number } }) => (
-  <div className="flex gap-4 items-center justify-center">
-    <div className="flex items-center gap-2">
-      <div className="w-3 h-3 rounded-sm bg-foreground" />
-      <span className="text-sm font-display italic text-foreground">{accuracy.white}%</span>
-      <span className="text-xs text-muted-foreground">accuracy</span>
-    </div>
-    <div className="w-px h-4 bg-border" />
-    <div className="flex items-center gap-2">
-      <div className="w-3 h-3 rounded-sm bg-muted-foreground" />
-      <span className="text-sm font-display italic text-foreground">{accuracy.black}%</span>
-      <span className="text-xs text-muted-foreground">accuracy</span>
-    </div>
-  </div>
-);
-
-// Move list with classifications
-const MoveList = ({ moves }: { moves: EvaluatedMove[] }) => {
-  const significantMoves = moves.filter(
-    (m) => m.classification.type === "blunder" || m.classification.type === "mistake" || m.classification.type === "inaccuracy"
-  );
-
-  if (significantMoves.length === 0) return null;
-
-  return (
-    <div className="border border-border rounded-lg p-3 space-y-1.5">
-      <span className="text-xs uppercase tracking-[0.15em] text-muted-foreground">Engine-Flagged Moves</span>
-      {significantMoves.map((m, i) => {
-        const cfg = classificationIcons[m.classification.type];
-        return (
-          <div key={i} className="flex items-center justify-between text-xs py-1 px-2 rounded hover:bg-accent/30">
-            <div className="flex items-center gap-2">
-              <span className={`font-mono font-bold ${cfg.color}`}>{cfg.label}</span>
-              <span className="text-foreground font-mono">
-                {m.moveNumber}{m.color === "w" ? "." : "..."} {m.san}
-              </span>
-              <span className="text-muted-foreground capitalize">{m.classification.type}</span>
-            </div>
-            <span className="text-muted-foreground">
-              {m.classification.winProbLoss > 0 ? `-${Math.round(m.classification.winProbLoss)}% win` : ""}
-            </span>
-          </div>
-        );
-      })}
-    </div>
-  );
-};
 
 const GameAnalysisModal = (props: Props) => {
   const { onClose } = props;
@@ -260,7 +202,6 @@ const GameAnalysisModal = (props: Props) => {
         if (evalResult) {
           body.engineAnalysis = {
             summary: evalResult.summary,
-            accuracy: evalResult.accuracy,
             depth: 10,
           };
         }
@@ -379,9 +320,7 @@ const GameAnalysisModal = (props: Props) => {
             {/* Engine eval section (shows as soon as engine finishes, even while AI loads) */}
             {engineEval && (
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-                <AccuracyDisplay accuracy={engineEval.accuracy} />
                 <EvalChart moves={engineEval.moves} />
-                <MoveList moves={engineEval.moves} />
               </motion.div>
             )}
 
