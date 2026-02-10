@@ -86,8 +86,8 @@ const InsightsPanel = ({ stats, games, username }: Props) => {
 
       {loading && (
         <div className="bg-card border border-border rounded-lg p-8 flex flex-col items-center gap-3">
-          <Loader2 className="h-6 w-6 animate-spin text-foreground" />
-          <p className="text-sm text-muted-foreground">AI is analyzing your games…</p>
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          <p className="text-sm text-muted-foreground font-display italic">Analyzing your games…</p>
         </div>
       )}
 
@@ -102,9 +102,9 @@ const InsightsPanel = ({ stats, games, username }: Props) => {
           {/* Overall Assessment */}
           <div className="bg-card border border-border rounded-lg p-5">
             <div className="flex items-start gap-3">
-              <Sparkles className="h-5 w-5 text-foreground mt-0.5 shrink-0" />
+              <Sparkles className="h-5 w-5 text-muted-foreground mt-0.5 shrink-0" />
               <div>
-                <h4 className="text-sm font-semibold text-foreground mb-1">Overall Assessment</h4>
+                <h4 className="text-lg font-display italic text-foreground mb-1">Overall Assessment</h4>
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   {analysis.overall_assessment}
                 </p>
@@ -115,14 +115,14 @@ const InsightsPanel = ({ stats, games, username }: Props) => {
           {/* Strengths */}
           {analysis.strengths.length > 0 && (
             <div className="bg-card border border-border rounded-lg p-5">
-              <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-success" /> Strengths
+              <h4 className="text-xs uppercase tracking-[0.15em] text-muted-foreground mb-3 flex items-center gap-2">
+                <CheckCircle className="h-3.5 w-3.5 text-success" /> Strengths
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {analysis.strengths.map((s, i) => (
-                  <div key={i} className="bg-success/5 border border-success/20 rounded-lg p-3">
-                    <p className="text-sm font-medium text-foreground">{s.title}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{s.description}</p>
+                  <div key={i} className="bg-success/5 border border-success/20 rounded-lg p-4">
+                    <p className="text-sm font-display italic text-foreground">{s.title}</p>
+                    <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">{s.description}</p>
                   </div>
                 ))}
               </div>
@@ -132,8 +132,8 @@ const InsightsPanel = ({ stats, games, username }: Props) => {
           {/* Weaknesses */}
           {analysis.weaknesses.length > 0 && (
             <div className="bg-card border border-border rounded-lg p-5">
-              <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-destructive" /> Areas to Improve
+              <h4 className="text-xs uppercase tracking-[0.15em] text-muted-foreground mb-3 flex items-center gap-2">
+                <AlertTriangle className="h-3.5 w-3.5 text-destructive" /> Areas to Improve
               </h4>
               <div className="space-y-3">
                 {analysis.weaknesses.map((w, i) => {
@@ -146,26 +146,26 @@ const InsightsPanel = ({ stats, games, username }: Props) => {
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <h5 className="text-sm font-semibold text-foreground">{w.title}</h5>
-                            <span className={`text-xs px-1.5 py-0.5 rounded ${cfg.bg} ${cfg.text} border ${cfg.border}`}>
+                            <h5 className="text-sm font-display italic text-foreground">{w.title}</h5>
+                            <span className={`text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded ${cfg.bg} ${cfg.text} border ${cfg.border}`}>
                               {cfg.label}
                             </span>
-                            <span className="text-xs text-muted-foreground capitalize">{w.category.replace("_", " ")}</span>
+                            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{w.category.replace("_", " ")}</span>
                           </div>
-                          <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
+                          <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
                             {w.description}
                           </p>
                           {w.lichess_themes.length > 0 && (
-                            <div className="flex flex-wrap gap-1.5 mt-2">
+                            <div className="flex flex-wrap gap-1.5 mt-2.5">
                               {w.lichess_themes.map((theme) => (
                                 <a
                                   key={theme}
                                   href={`https://lichess.org/training/${theme}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-foreground/5 text-foreground hover:bg-foreground/10 border border-border transition-colors"
+                                  className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-card text-muted-foreground hover:text-foreground border border-border hover:border-foreground/20 transition-colors"
                                 >
-                                  Practice: {theme}
+                                  {theme}
                                   <ExternalLink className="h-3 w-3" />
                                 </a>
                               ))}
@@ -180,15 +180,12 @@ const InsightsPanel = ({ stats, games, username }: Props) => {
             </div>
           )}
 
-          {/* Recommended Puzzles with Inline Lichess */}
+          {/* Recommended Training */}
           {analysis.recommended_puzzles.length > 0 && (
             <div className="bg-card border border-border rounded-lg p-5">
-              <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-                <Puzzle className="h-4 w-4 text-foreground" /> Recommended Training
+              <h4 className="text-xs uppercase tracking-[0.15em] text-muted-foreground mb-3 flex items-center gap-2">
+                <Puzzle className="h-3.5 w-3.5" /> Recommended Training
               </h4>
-
-
-              {/* Puzzle theme cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {analysis.recommended_puzzles.map((p, i) => (
                   <a
@@ -196,10 +193,10 @@ const InsightsPanel = ({ stats, games, username }: Props) => {
                     href={`https://lichess.org/training/${p.theme}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group bg-foreground/[0.03] border border-border rounded-lg p-4 hover:border-foreground/20 transition-all"
+                    className="group bg-card border border-border rounded-lg p-4 hover:border-foreground/20 transition-all card-hover"
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-semibold text-foreground">{p.label}</span>
+                      <span className="text-sm font-display italic text-foreground">{p.label}</span>
                       <ExternalLink className="h-3.5 w-3.5 text-muted-foreground group-hover:text-foreground transition-colors" />
                     </div>
                     <p className="text-xs text-muted-foreground leading-relaxed">{p.reason}</p>
