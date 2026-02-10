@@ -13,7 +13,7 @@ const ProfileHeader = ({ profile }: Props) => {
 
   return (
     <div className="flex items-center gap-5 opacity-0 animate-fade-in mb-8">
-      <div className="h-16 w-16 rounded-full bg-secondary border-2 border-primary/30 flex items-center justify-center overflow-hidden glow-primary">
+      <div className="h-16 w-16 rounded-full bg-secondary border border-border flex items-center justify-center overflow-hidden glow-primary">
         {profile.avatar ? (
           <img src={profile.avatar} alt={profile.username} className="h-full w-full object-cover" />
         ) : (
@@ -21,7 +21,7 @@ const ProfileHeader = ({ profile }: Props) => {
         )}
       </div>
       <div>
-        <h2 className="text-2xl font-bold text-foreground">{profile.username}</h2>
+        <h2 className="text-2xl font-display italic font-semibold text-foreground">{profile.username}</h2>
         <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
           {profile.name && <span>{profile.name}</span>}
           <span className="flex items-center gap-1">

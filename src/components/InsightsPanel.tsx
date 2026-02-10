@@ -16,7 +16,7 @@ const InsightsPanel = ({ stats }: Props) => {
 
   return (
     <div className="bg-card border border-border rounded-lg p-5 opacity-0 animate-fade-in" style={{ animationDelay: "500ms" }}>
-      <h3 className="text-lg font-semibold text-foreground mb-4">Profile Breakdown</h3>
+      <h3 className="text-lg font-display italic font-semibold text-foreground mb-4">Profile Breakdown</h3>
       <div className="space-y-3">
         {insights.map((insight, i) => {
           const cfg = severityConfig[insight.severity];

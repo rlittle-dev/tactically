@@ -23,7 +23,7 @@ const RecentGames = ({ games, username }: Props) => {
 
   return (
     <div className="bg-card border border-border rounded-lg p-5 opacity-0 animate-fade-in" style={{ animationDelay: "400ms" }}>
-      <h3 className="text-lg font-semibold text-foreground mb-4">Recent Matches</h3>
+      <h3 className="text-lg font-display italic font-semibold text-foreground mb-4">Recent Matches</h3>
       <div className="space-y-2">
         {games.map((game, i) => {
           const result = getResult(game, username);

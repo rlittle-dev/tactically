@@ -17,43 +17,43 @@ const RatingChart = ({ games, username }: Props) => {
 
   return (
     <div className="bg-card border border-border rounded-lg p-5 opacity-0 animate-fade-in" style={{ animationDelay: "350ms" }}>
-      <h3 className="text-lg font-semibold text-foreground mb-4">Recent Rating Trend</h3>
+      <h3 className="text-lg font-display italic font-semibold text-foreground mb-4">Recent Rating Trend</h3>
       <div className="h-[200px]">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data}>
             <defs>
               <linearGradient id="ratingGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="hsl(38, 92%, 50%)" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="hsl(38, 92%, 50%)" stopOpacity={0} />
+                <stop offset="5%" stopColor="hsl(0, 0%, 100%)" stopOpacity={0.2} />
+                <stop offset="95%" stopColor="hsl(0, 0%, 100%)" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 15%, 18%)" />
-            <XAxis dataKey="game" tick={{ fill: "hsl(220, 10%, 50%)", fontSize: 12 }} tickLine={false} axisLine={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(0, 0%, 14%)" />
+            <XAxis dataKey="game" tick={{ fill: "hsl(0, 0%, 45%)", fontSize: 12 }} tickLine={false} axisLine={false} />
             <YAxis
               domain={["dataMin - 20", "dataMax + 20"]}
-              tick={{ fill: "hsl(220, 10%, 50%)", fontSize: 12, fontFamily: "JetBrains Mono" }}
+              tick={{ fill: "hsl(0, 0%, 45%)", fontSize: 12, fontFamily: "JetBrains Mono" }}
               tickLine={false}
               axisLine={false}
               width={50}
             />
             <Tooltip
               contentStyle={{
-                background: "hsl(220, 18%, 10%)",
-                border: "1px solid hsl(220, 15%, 18%)",
+                background: "hsl(0, 0%, 7%)",
+                border: "1px solid hsl(0, 0%, 14%)",
                 borderRadius: "8px",
                 fontFamily: "JetBrains Mono",
                 fontSize: "12px",
               }}
-              labelStyle={{ color: "hsl(220, 10%, 50%)" }}
-              itemStyle={{ color: "hsl(38, 92%, 50%)" }}
+              labelStyle={{ color: "hsl(0, 0%, 45%)" }}
+              itemStyle={{ color: "hsl(0, 0%, 100%)" }}
             />
             <Area
               type="monotone"
               dataKey="rating"
-              stroke="hsl(38, 92%, 50%)"
+              stroke="hsl(0, 0%, 100%)"
               strokeWidth={2}
               fill="url(#ratingGradient)"
-              dot={{ fill: "hsl(38, 92%, 50%)", strokeWidth: 0, r: 3 }}
+              dot={{ fill: "hsl(0, 0%, 100%)", strokeWidth: 0, r: 3 }}
               activeDot={{ r: 5, strokeWidth: 0 }}
             />
           </AreaChart>

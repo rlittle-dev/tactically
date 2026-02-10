@@ -14,7 +14,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ["Space Grotesk", "system-ui", "sans-serif"],
+        sans: ["Inter", "system-ui", "sans-serif"],
+        display: ["Cormorant Garamond", "Georgia", "serif"],
         mono: ["JetBrains Mono", "monospace"],
       },
       colors: {
@@ -93,17 +94,12 @@ export default {
           from: { opacity: "0", transform: "translateX(-10px)" },
           to: { opacity: "1", transform: "translateX(0)" },
         },
-        "pulse-glow": {
-          "0%, 100%": { boxShadow: "0 0 20px hsl(38 92% 50% / 0.1)" },
-          "50%": { boxShadow: "0 0 30px hsl(38 92% 50% / 0.25)" },
-        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "fade-in": "fade-in 0.5s ease-out forwards",
         "slide-in": "slide-in 0.4s ease-out forwards",
-        "pulse-glow": "pulse-glow 3s ease-in-out infinite",
       },
     },
   },

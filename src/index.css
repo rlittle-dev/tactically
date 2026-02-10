@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,26 +6,26 @@
 
 @layer base {
   :root {
-    --background: 220 20% 7%;
-    --foreground: 40 10% 90%;
+    --background: 0 0% 4%;
+    --foreground: 0 0% 92%;
 
-    --card: 220 18% 10%;
-    --card-foreground: 40 10% 90%;
+    --card: 0 0% 7%;
+    --card-foreground: 0 0% 92%;
 
-    --popover: 220 18% 10%;
-    --popover-foreground: 40 10% 90%;
+    --popover: 0 0% 7%;
+    --popover-foreground: 0 0% 92%;
 
-    --primary: 38 92% 50%;
-    --primary-foreground: 220 20% 7%;
+    --primary: 0 0% 100%;
+    --primary-foreground: 0 0% 4%;
 
-    --secondary: 220 15% 15%;
-    --secondary-foreground: 40 10% 80%;
+    --secondary: 0 0% 11%;
+    --secondary-foreground: 0 0% 80%;
 
-    --muted: 220 15% 13%;
-    --muted-foreground: 220 10% 50%;
+    --muted: 0 0% 11%;
+    --muted-foreground: 0 0% 45%;
 
-    --accent: 38 70% 40%;
-    --accent-foreground: 40 10% 95%;
+    --accent: 0 0% 18%;
+    --accent-foreground: 0 0% 92%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
@@ -33,24 +33,24 @@
     --success: 142 71% 45%;
     --success-foreground: 142 71% 90%;
 
-    --border: 220 15% 18%;
-    --input: 220 15% 18%;
-    --ring: 38 92% 50%;
+    --border: 0 0% 14%;
+    --input: 0 0% 14%;
+    --ring: 0 0% 100%;
 
-    --radius: 0.75rem;
+    --radius: 0.5rem;
 
     --chart-win: 142 71% 45%;
     --chart-loss: 0 72% 51%;
-    --chart-draw: 220 10% 50%;
+    --chart-draw: 0 0% 45%;
 
-    --sidebar-background: 220 18% 10%;
-    --sidebar-foreground: 40 10% 90%;
-    --sidebar-primary: 38 92% 50%;
-    --sidebar-primary-foreground: 220 20% 7%;
-    --sidebar-accent: 220 15% 15%;
-    --sidebar-accent-foreground: 40 10% 80%;
-    --sidebar-border: 220 15% 18%;
-    --sidebar-ring: 38 92% 50%;
+    --sidebar-background: 0 0% 7%;
+    --sidebar-foreground: 0 0% 92%;
+    --sidebar-primary: 0 0% 100%;
+    --sidebar-primary-foreground: 0 0% 4%;
+    --sidebar-accent: 0 0% 11%;
+    --sidebar-accent-foreground: 0 0% 80%;
+    --sidebar-border: 0 0% 14%;
+    --sidebar-ring: 0 0% 100%;
   }
 }
 
@@ -60,8 +60,8 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans antialiased;
-    font-family: 'Space Grotesk', system-ui, sans-serif;
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', system-ui, sans-serif;
   }
 
   code, .font-mono {
@@ -70,15 +70,31 @@
 }
 
 @layer utilities {
+  .font-display {
+    font-family: 'Cormorant Garamond', 'Georgia', serif;
+  }
+
   .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-amber-300;
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, hsl(0 0% 100%) 0%, hsl(0 0% 60%) 100%);
   }
 
   .glow-primary {
-    box-shadow: 0 0 20px hsl(38 92% 50% / 0.15), 0 0 60px hsl(38 92% 50% / 0.05);
+    box-shadow: 0 0 20px hsl(0 0% 100% / 0.08), 0 0 60px hsl(0 0% 100% / 0.03);
   }
 
   .card-hover {
-    @apply transition-all duration-300 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5;
+    @apply transition-all duration-300 hover:border-foreground/20 hover:shadow-lg hover:shadow-white/[0.03];
+  }
+
+  .chess-pattern {
+    background-image:
+      linear-gradient(45deg, hsl(0 0% 8%) 25%, transparent 25%),
+      linear-gradient(-45deg, hsl(0 0% 8%) 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, hsl(0 0% 8%) 75%),
+      linear-gradient(-45deg, transparent 75%, hsl(0 0% 8%) 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+    opacity: 0.4;
   }
 }
