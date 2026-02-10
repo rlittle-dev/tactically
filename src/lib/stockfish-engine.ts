@@ -1,16 +1,16 @@
 /**
- * Stockfish WASM Web Worker wrapper.
- * Communicates with the engine via UCI protocol.
+ * Stockfish Web Worker wrapper using inline worker approach.
+ * Falls back gracefully if WebAssembly/Workers unavailable.
  */
 
 export interface StockfishEval {
   fen: string;
   moveNumber: number;
-  move: string; // SAN notation
+  move: string;
   score: number; // centipawns from white's perspective
   bestMove: string | null;
   depth: number;
-  mate: number | null; // mate in N (positive = white wins, negative = black wins)
+  mate: number | null;
 }
 
 export interface MoveClassification {
@@ -19,10 +19,9 @@ export interface MoveClassification {
 }
 
 export function classifyMove(prevScore: number, currentScore: number, isWhiteTurn: boolean): MoveClassification {
-  // cpLoss from the moving side's perspective
   const delta = isWhiteTurn
-    ? prevScore - currentScore  // white just moved, score should stay same or improve
-    : currentScore - prevScore; // black just moved, negative score improving means delta positive
+    ? prevScore - currentScore
+    : currentScore - prevScore;
 
   if (delta >= 200) return { type: "blunder", cpLoss: delta };
   if (delta >= 100) return { type: "mistake", cpLoss: delta };
@@ -31,46 +30,78 @@ export function classifyMove(prevScore: number, currentScore: number, isWhiteTur
   return { type: "good", cpLoss: delta };
 }
 
+const STOCKFISH_PATH = "/stockfish/stockfish-asm.js";
+
+async function createWorkerFromUrl(url: string): Promise<Worker> {
+  // Fetch the script and create a blob worker to avoid CORS/CSP issues
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`Failed to fetch stockfish: ${response.status}`);
+  const scriptText = await response.text();
+  const blob = new Blob([scriptText], { type: "application/javascript" });
+  const blobUrl = URL.createObjectURL(blob);
+  const worker = new Worker(blobUrl);
+  return worker;
+}
+
 export class StockfishEngine {
   private worker: Worker | null = null;
   private ready = false;
-  private messageResolvers: ((value: string) => void)[] = [];
+  private blobUrl: string | null = null;
 
   async init(): Promise<void> {
+    if (typeof Worker === "undefined") {
+      throw new Error("Web Workers not supported");
+    }
+
+    // Try direct Worker first, then blob URL fallback
+    try {
+      this.worker = new Worker(STOCKFISH_PATH);
+      await this.waitForReady();
+      return;
+    } catch {
+      console.log("Direct worker failed, trying blob URL approach...");
+      this.worker?.terminate();
+    }
+
+    try {
+      this.worker = await createWorkerFromUrl(STOCKFISH_PATH);
+      await this.waitForReady();
+    } catch (err) {
+      console.error("All Stockfish init approaches failed:", err);
+      this.worker?.terminate();
+      this.worker = null;
+      throw err instanceof Error ? err : new Error(String(err));
+    }
+  }
+
+  private async waitForReady(): Promise<void> {
     return new Promise((resolve, reject) => {
-      try {
-        this.worker = new Worker("/stockfish/stockfish.js");
+      if (!this.worker) return reject(new Error("No worker"));
 
-        this.worker.onmessage = (e: MessageEvent) => {
-          const msg = typeof e.data === "string" ? e.data : "";
-          // Resolve any waiting promises
-          if (this.messageResolvers.length > 0) {
-            // Check if this is a final response
-            if (msg.startsWith("bestmove") || msg === "uciok" || msg === "readyok") {
-              const resolver = this.messageResolvers.shift();
-              resolver?.(msg);
-            }
-          }
-        };
+      const timeout = setTimeout(() => {
+        reject(new Error("Stockfish init timed out after 20s"));
+      }, 20000);
 
-        this.worker.onerror = (err) => {
-          reject(new Error(`Stockfish worker error: ${err.message}`));
-        };
+      this.worker.onerror = (err) => {
+        clearTimeout(timeout);
+        reject(new Error(`Worker error: ${err.message || "unknown"}`));
+      };
 
-        // Initialize UCI
-        this.send("uci");
-        this.waitFor("uciok").then(() => {
+      const handler = (e: MessageEvent) => {
+        const msg = typeof e.data === "string" ? e.data : "";
+        if (msg === "uciok") {
           this.send("isready");
-          return this.waitFor("readyok");
-        }).then(() => {
+        } else if (msg === "readyok") {
+          clearTimeout(timeout);
           this.ready = true;
-          // Configure for analysis (lower hash for browser)
           this.send("setoption name Hash value 16");
+          this.worker?.removeEventListener("message", handler);
           resolve();
-        });
-      } catch (err) {
-        reject(err);
-      }
+        }
+      };
+
+      this.worker.addEventListener("message", handler);
+      this.send("uci");
     });
   }
 
@@ -78,20 +109,7 @@ export class StockfishEngine {
     this.worker?.postMessage(command);
   }
 
-  private waitFor(expected: string): Promise<string> {
-    return new Promise((resolve) => {
-      const handler = (e: MessageEvent) => {
-        const msg = typeof e.data === "string" ? e.data : "";
-        if (msg.startsWith(expected)) {
-          this.worker?.removeEventListener("message", handler);
-          resolve(msg);
-        }
-      };
-      this.worker?.addEventListener("message", handler);
-    });
-  }
-
-  async evaluate(fen: string, depth: number = 16): Promise<{ score: number; bestMove: string | null; mate: number | null; depth: number }> {
+  async evaluate(fen: string, depth: number = 10): Promise<{ score: number; bestMove: string | null; mate: number | null; depth: number }> {
     if (!this.ready || !this.worker) throw new Error("Engine not ready");
 
     return new Promise((resolve) => {
@@ -100,7 +118,6 @@ export class StockfishEngine {
       const handler = (e: MessageEvent) => {
         const msg = typeof e.data === "string" ? e.data : "";
 
-        // Parse info lines for score
         if (msg.startsWith("info") && msg.includes("score")) {
           const depthMatch = msg.match(/depth (\d+)/);
           const cpMatch = msg.match(/score cp (-?\d+)/);
@@ -138,6 +155,10 @@ export class StockfishEngine {
       this.worker.terminate();
       this.worker = null;
       this.ready = false;
+    }
+    if (this.blobUrl) {
+      URL.revokeObjectURL(this.blobUrl);
+      this.blobUrl = null;
     }
   }
 }
