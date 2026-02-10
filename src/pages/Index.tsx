@@ -29,6 +29,7 @@ const RevealSection = ({
 }) => (
   <motion.div
     initial={{ opacity: 0, y: 40, filter: "blur(10px)" }}
+    animate={{ opacity: 0, y: 40, filter: "blur(10px)" }}
     whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
     viewport={{ once: false, margin: "-60px" }}
     transition={{ duration: 0.8, delay, ease: [0.25, 0.46, 0.45, 0.94] as const }}
@@ -50,6 +51,7 @@ const RevealItem = ({
 }) => (
   <motion.div
     initial={{ opacity: 0, y: 30, scale: 0.96, filter: "blur(6px)" }}
+    animate={{ opacity: 0, y: 30, scale: 0.96, filter: "blur(6px)" }}
     whileInView={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
     viewport={{ once: false, margin: "-40px" }}
     transition={{
