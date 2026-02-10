@@ -16,7 +16,7 @@ A sleek, real-time chess analytics dashboard that connects to the Chess.com API 
 - **PGN Upload** — Upload and analyze any PGN file directly
 - **Shareable Profile Cards** — Generate and download profile cards or copy share links (tactically.me/player/username)
 - **Documentation** — In-app docs detailing data sources, engine analysis, and AI coaching methodology
-- **Fluid Animations** — Apple-inspired motion design with staggered reveals, spring physics, and glassmorphis
+- **Fluid Animations** — Apple-inspired motion design with staggered reveals, spring physics, and glassmorphism
 
 ## Tech Stack
 
