@@ -13,8 +13,8 @@ export interface ChessStats {
   chess_rapid?: TimeControlStats;
   chess_blitz?: TimeControlStats;
   chess_bullet?: TimeControlStats;
-  tactics?: { highest?: { rating: number }; lowest?: { rating: number } };
-  puzzle_rush?: { best?: { score: number } };
+  tactics?: { highest?: { rating: number; date: number }; lowest?: { rating: number; date: number } };
+  puzzle_rush?: { best?: { total_attempts?: number; score: number } };
 }
 
 export interface TimeControlStats {

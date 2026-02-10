@@ -181,12 +181,24 @@ const InsightsPanel = ({ stats, games, username }: Props) => {
             </div>
           )}
 
-          {/* Recommended Puzzles */}
+          {/* Recommended Puzzles with Inline Lichess */}
           {analysis.recommended_puzzles.length > 0 && (
             <div className="bg-card border border-border rounded-lg p-5">
               <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
                 <Puzzle className="h-4 w-4 text-foreground" /> Recommended Training
               </h4>
+
+              {/* Inline Lichess Puzzle */}
+              <div className="mb-4 rounded-lg overflow-hidden border border-border">
+                <iframe
+                  src={`https://lichess.org/training/${analysis.recommended_puzzles[0].theme}?theme=dark`}
+                  className="w-full h-[500px] bg-background"
+                  allow="autoplay"
+                  title="Lichess Puzzle Training"
+                />
+              </div>
+
+              {/* Puzzle theme cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {analysis.recommended_puzzles.map((p, i) => (
                   <a
