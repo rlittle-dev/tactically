@@ -14,7 +14,7 @@ const ProfileCardModal = ({ username, onClose }: Props) => {
   const [stats, setStats] = useState<ChessStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { captureRef, downloadImage, shareImage } = useShareAsImage();
+  const { captureRef, downloadImage, copyShareLink } = useShareAsImage();
 
   useState(() => {
     const load = async () => {
@@ -64,7 +64,7 @@ const ProfileCardModal = ({ username, onClose }: Props) => {
           <div className="flex items-center justify-between mb-3">
             <ShareButtons
               onDownload={() => downloadImage(`tactically-${username}`)}
-              onShare={() => shareImage(`tactically-${username}`)}
+              onShare={() => copyShareLink()}
             />
             <button onClick={onClose} className="p-2 rounded-lg hover:bg-accent transition-colors text-muted-foreground hover:text-foreground">
               <X className="h-5 w-5" />
@@ -169,7 +169,7 @@ const ProfileCardModal = ({ username, onClose }: Props) => {
                 {/* Branding */}
                 <div className="flex items-center justify-center gap-2 pt-2 border-t border-border/40">
                   <span className="text-foreground/60 text-sm">♞</span>
-                  <span className="text-xs font-display italic text-muted-foreground tracking-wide">tactically.lovable.app</span>
+                  <span className="text-xs font-display italic text-muted-foreground tracking-wide">tactically.me</span>
                 </div>
               </div>
             )}
