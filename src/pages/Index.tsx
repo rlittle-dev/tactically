@@ -301,7 +301,7 @@ const Index = () => {
               <Linkedin className="h-5 w-5" />
             </a>
           </div>
-          <Link to="/docs" className="flex items-center gap-1.5 hover:text-foreground transition-colors">
+          <Link to="/docs" className="flex items-center gap-1.5 hover:text-foreground transition-colors opacity-50">
             
             Documentation
           </Link>
