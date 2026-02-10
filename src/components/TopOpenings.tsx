@@ -17,16 +17,44 @@ interface OpeningData {
 }
 
 // Known system keywords that should become the display name when found
-const SYSTEM_KEYWORDS = [
-  "London System", "Catalan", "Kings Indian", "Queens Gambit", "Sicilian Defense",
-  "French Defense", "Caro Kann", "Pirc Defense", "Italian Game", "Ruy Lopez",
-  "Scotch Game", "English Opening", "Dutch Defense", "Grunfeld Defense",
-  "Nimzo Indian", "Bogo Indian", "Benoni Defense", "Scandinavian Defense",
-  "Alekhine Defense", "Philidor Defense", "Petroff Defense", "Vienna Game",
-  "Kings Gambit", "Budapest Gambit", "Trompowsky Attack", "Torre Attack",
-  "Colle System", "Zukertort Opening", "Reti Opening", "Bird Opening",
-  "Slav Defense", "Semi Slav", "Tarrasch Defense", "Nimzowitsch Defense",
-  "Owen Defense", "Modern Defense", "Czech Defense",
+const SYSTEM_KEYWORDS: [string, string][] = [
+  // [search term (lowercase), display name matching Lichess URL]
+  ["london system", "London System"],
+  ["catalan", "Catalan Opening"],
+  ["kings indian", "King's Indian Defense"],
+  ["queens gambit", "Queen's Gambit"],
+  ["sicilian", "Sicilian Defense"],
+  ["french defense", "French Defense"],
+  ["caro kann", "Caro-Kann Defense"],
+  ["pirc defense", "Pirc Defense"],
+  ["italian game", "Italian Game"],
+  ["ruy lopez", "Ruy Lopez"],
+  ["scotch game", "Scotch Game"],
+  ["english opening", "English Opening"],
+  ["dutch defense", "Dutch Defense"],
+  ["grunfeld", "Gruenfeld Defense"],
+  ["nimzo indian", "Nimzo-Indian Defense"],
+  ["bogo indian", "Bogo-Indian Defense"],
+  ["benoni", "Benoni Defense"],
+  ["scandinavian", "Scandinavian Defense"],
+  ["alekhine", "Alekhine Defense"],
+  ["philidor", "Philidor Defense"],
+  ["petroff", "Petrov's Defense"],
+  ["vienna game", "Vienna Game"],
+  ["kings gambit", "King's Gambit"],
+  ["budapest", "Budapest Gambit"],
+  ["trompowsky", "Trompowsky Attack"],
+  ["torre attack", "Torre Attack"],
+  ["colle system", "Colle System"],
+  ["zukertort", "Zukertort Opening"],
+  ["reti opening", "Reti Opening"],
+  ["bird opening", "Bird Opening"],
+  ["slav defense", "Slav Defense"],
+  ["semi slav", "Semi-Slav Defense"],
+  ["tarrasch", "Tarrasch Defense"],
+  ["nimzowitsch defense", "Nimzowitsch Defense"],
+  ["modern defense", "Modern Defense"],
+  ["queens pawn", "Queen's Pawn Game"],
 ];
 
 function simplifyOpeningName(raw: string): string {
@@ -36,10 +64,10 @@ function simplifyOpeningName(raw: string): string {
   name = name.replace(/[\d.]+\s*$/, "").trim();
 
   // Check for known system names (longest match first)
-  const sorted = [...SYSTEM_KEYWORDS].sort((a, b) => b.length - a.length);
-  for (const system of sorted) {
-    if (name.toLowerCase().includes(system.toLowerCase())) {
-      return system;
+  const sorted = [...SYSTEM_KEYWORDS].sort((a, b) => b[0].length - a[0].length);
+  for (const [search, display] of sorted) {
+    if (name.toLowerCase().includes(search)) {
+      return display;
     }
   }
 
@@ -80,9 +108,10 @@ function getResultFromPgn(game: RecentGame, username: string): "win" | "loss" | 
   return "draw";
 }
 
-function getLichessStudyUrl(slug: string): string {
-  const simplified = slug.split("-").slice(0, 3).join("-").toLowerCase();
-  return `https://lichess.org/opening/${simplified}`;
+function getLichessStudyUrl(name: string): string {
+  // Map simplified name directly to Lichess opening URL format
+  const slug = name.replace(/\s+/g, "_").replace(/'/g, "%27");
+  return `https://lichess.org/opening/${slug}`;
 }
 
 const container = {
@@ -173,7 +202,7 @@ const TopOpenings = ({ games, username }: Props) => {
                 />
               </div>
               <a
-                href={getLichessStudyUrl(o.slug)}
+                href={getLichessStudyUrl(o.name)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
