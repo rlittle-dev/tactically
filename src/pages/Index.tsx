@@ -26,23 +26,17 @@ const RevealSection = ({
   children: React.ReactNode;
   className?: string;
   delay?: number;
-}) => {
-  const variants = {
-    hidden: { opacity: 0, y: 40 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.7, delay, ease: [0.25, 0.46, 0.45, 0.94] as const } },
-  };
-  return (
-    <motion.div
-      variants={variants}
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: false, margin: "-60px" }}
-      className={className}
-    >
-      {children}
-    </motion.div>
-  );
-};
+}) => (
+  <motion.div
+    initial={{ opacity: 0, y: 40 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true, margin: "-60px" }}
+    transition={{ duration: 0.7, delay, ease: [0.25, 0.46, 0.45, 0.94] as const }}
+    className={className}
+  >
+    {children}
+  </motion.div>
+);
 
 /* ── Staggered grid children ── */
 const RevealItem = ({
@@ -53,23 +47,21 @@ const RevealItem = ({
   children: React.ReactNode;
   className?: string;
   index?: number;
-}) => {
-  const variants = {
-    hidden: { opacity: 0, y: 24, scale: 0.96 },
-    visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.5, delay: index * 0.06, ease: [0.25, 0.46, 0.45, 0.94] as const } },
-  };
-  return (
-    <motion.div
-      variants={variants}
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: false, margin: "-40px" }}
-      className={className}
-    >
-      {children}
-    </motion.div>
-  );
-};
+}) => (
+  <motion.div
+    initial={{ opacity: 0, y: 24, scale: 0.96 }}
+    whileInView={{ opacity: 1, y: 0, scale: 1 }}
+    viewport={{ once: true, margin: "-40px" }}
+    transition={{
+      duration: 0.5,
+      delay: index * 0.06,
+      ease: [0.25, 0.46, 0.45, 0.94] as const,
+    }}
+    className={className}
+  >
+    {children}
+  </motion.div>
+);
 
 const FEATURES = [
   { icon: <TrendingUp className="h-5 w-5" />, title: "Rating Trends", desc: "Interactive charts tracking your Elo across Rapid, Blitz & Bullet with date-based timelines" },
@@ -256,7 +248,7 @@ const Index = () => {
                       key={name}
                       initial={{ opacity: 0, y: 12 }}
                       whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: false }}
+                      viewport={{ once: true }}
                       transition={{ delay: 0.1 + i * 0.06, duration: 0.5 }}
                       whileHover={{ scale: 1.08, borderColor: "hsl(0 0% 30%)" }}
                       whileTap={{ scale: 0.95 }}
@@ -273,7 +265,7 @@ const Index = () => {
               <motion.div
                 initial={{ scaleX: 0 }}
                 whileInView={{ scaleX: 1 }}
-                viewport={{ once: false }}
+                viewport={{ once: true }}
                 transition={{ duration: 1, ease: [0.25, 0.46, 0.45, 0.94] as const }}
                 className="h-px bg-gradient-to-r from-transparent via-border to-transparent max-w-md mx-auto"
               />
@@ -312,7 +304,7 @@ const Index = () => {
               <motion.div
                 initial={{ scaleX: 0 }}
                 whileInView={{ scaleX: 1 }}
-                viewport={{ once: false }}
+                viewport={{ once: true }}
                 transition={{ duration: 1, ease: [0.25, 0.46, 0.45, 0.94] as const }}
                 className="h-px bg-gradient-to-r from-transparent via-border to-transparent max-w-md mx-auto"
               />
@@ -356,7 +348,7 @@ const Index = () => {
               <motion.div
                 initial={{ scaleX: 0 }}
                 whileInView={{ scaleX: 1 }}
-                viewport={{ once: false }}
+                viewport={{ once: true }}
                 transition={{ duration: 1, ease: [0.25, 0.46, 0.45, 0.94] as const }}
                 className="h-px bg-gradient-to-r from-transparent via-border to-transparent max-w-md mx-auto"
               />
@@ -381,7 +373,7 @@ const Index = () => {
                       key={t}
                       initial={{ opacity: 0, scale: 0.9 }}
                       whileInView={{ opacity: 1, scale: 1 }}
-                      viewport={{ once: false }}
+                      viewport={{ once: true }}
                       transition={{ delay: i * 0.08, duration: 0.4 }}
                       className="px-3.5 py-1.5 rounded-lg border border-border/40 bg-card/20 text-xs text-muted-foreground font-mono hover:border-foreground/20 hover:text-foreground transition-colors"
                     >
