@@ -4,6 +4,7 @@ import { X, ChevronRight, Target, CheckCircle2, AlertTriangle, BookOpen, Loader2
 import { RecentGame, getResult, getOpponentName, getOpponentRating, getPlayerRating } from "@/lib/chess-api";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useShareAsImage, ShareButtons } from "@/hooks/use-share-image";
 
 interface GameAnalysis {
   summary: string;
@@ -71,6 +72,7 @@ const GameAnalysisModal = (props: Props) => {
   const [analysis, setAnalysis] = useState<GameAnalysis | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { captureRef, downloadImage, shareImage } = useShareAsImage();
 
   const isRawPgn = "rawPgn" in props && !!props.rawPgn;
 
@@ -153,6 +155,7 @@ const GameAnalysisModal = (props: Props) => {
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
           onClick={(e) => e.stopPropagation()}
           className="relative w-full max-w-2xl max-h-[85vh] overflow-y-auto bg-card border border-border rounded-xl shadow-2xl"
+          ref={captureRef}
         >
           {/* Header */}
           <div className="sticky top-0 z-10 bg-card/95 backdrop-blur-xl border-b border-border p-5 flex items-center justify-between">
@@ -167,9 +170,18 @@ const GameAnalysisModal = (props: Props) => {
               </div>
               <h2 className="text-lg font-display italic text-foreground">{displayTitle}</h2>
             </div>
-            <button onClick={onClose} className="p-2 rounded-lg hover:bg-accent transition-colors text-muted-foreground hover:text-foreground">
-              <X className="h-5 w-5" />
-            </button>
+            <div className="flex items-center gap-1">
+              {analysis && (
+                <ShareButtons
+                  onDownload={() => downloadImage("tactically-analysis")}
+                  onShare={() => shareImage("tactically-analysis")}
+                  compact
+                />
+              )}
+              <button onClick={onClose} className="p-2 rounded-lg hover:bg-accent transition-colors text-muted-foreground hover:text-foreground">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
           </div>
 
           <div className="p-5 space-y-6">
