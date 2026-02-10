@@ -28,32 +28,49 @@ export function cpToWinProb(cp: number): number {
 }
 
 /**
- * Classify a move based on win probability loss (chess.com style thresholds).
+ * Classify a move based on evaluation change in pawn units (not centipawns).
+ * Uses the eval swing in context — a drop from +6 to +4 is NOT a mistake,
+ * but a drop from +1 to -1 IS. We measure how much the player's advantage
+ * changed relative to the position's nature.
  */
 export function classifyMove(prevScore: number, currentScore: number, isWhiteTurn: boolean): MoveClassification {
   const prevWinProb = cpToWinProb(prevScore);
   const currWinProb = cpToWinProb(currentScore);
 
-  // Win prob loss from the moving player's perspective
   const winProbLoss = isWhiteTurn
     ? prevWinProb - currWinProb
-    : (100 - prevWinProb) - (100 - currWinProb); // i.e. currWinProb - prevWinProb for black's benefit
+    : (100 - prevWinProb) - (100 - currWinProb);
 
-  const delta = isWhiteTurn
-    ? prevScore - currentScore
-    : currentScore - prevScore;
+  // Eval swing in pawns from the moving player's perspective
+  const evalBefore = isWhiteTurn ? prevScore / 100 : -prevScore / 100;
+  const evalAfter = isWhiteTurn ? currentScore / 100 : -currentScore / 100;
+  const evalDrop = evalBefore - evalAfter; // positive = player lost advantage
 
-  // Hybrid thresholds: use both win probability loss AND centipawn loss
-  const cpLossAbs = Math.max(0, delta);
+  // Don't flag moves harshly when the player was already losing badly (eval < -3)
+  // or when still clearly winning after the move (evalAfter > 2)
+  const wasLosing = evalBefore < -3;
+  const stillWinning = evalAfter > 2;
+  const dampened = wasLosing || stillWinning;
 
-  // Blunder: ≥15% win prob loss OR ≥200cp loss
-  if (winProbLoss >= 15 || cpLossAbs >= 200) return { type: "blunder", cpLoss: cpLossAbs, winProbLoss };
-  // Mistake: ≥8% win prob loss OR ≥100cp loss
-  if (winProbLoss >= 8 || cpLossAbs >= 100) return { type: "mistake", cpLoss: cpLossAbs, winProbLoss };
-  // Inaccuracy: ≥4% win prob loss OR ≥50cp loss
-  if (winProbLoss >= 4 || cpLossAbs >= 50) return { type: "inaccuracy", cpLoss: cpLossAbs, winProbLoss };
-  if (winProbLoss <= -5) return { type: "brilliant", cpLoss: delta, winProbLoss };
-  if (winProbLoss <= -1) return { type: "excellent", cpLoss: delta, winProbLoss };
+  const cpLossAbs = Math.max(0, Math.round(evalDrop * 100));
+
+  if (dampened) {
+    // Only flag truly massive swings when position is already decided
+    if (evalDrop >= 5) return { type: "blunder", cpLoss: cpLossAbs, winProbLoss };
+    if (evalDrop >= 3) return { type: "mistake", cpLoss: cpLossAbs, winProbLoss };
+    return { type: "good", cpLoss: cpLossAbs, winProbLoss };
+  }
+
+  // Normal position classification based on eval drop in pawns
+  // Blunder: dropped ≥2 pawns of eval
+  if (evalDrop >= 2) return { type: "blunder", cpLoss: cpLossAbs, winProbLoss };
+  // Mistake: dropped ≥1 pawn of eval
+  if (evalDrop >= 1) return { type: "mistake", cpLoss: cpLossAbs, winProbLoss };
+  // Inaccuracy: dropped ≥0.5 pawns of eval
+  if (evalDrop >= 0.5) return { type: "inaccuracy", cpLoss: cpLossAbs, winProbLoss };
+  // Excellent/brilliant based on win prob gain
+  if (winProbLoss <= -5) return { type: "brilliant", cpLoss: Math.round(evalDrop * 100), winProbLoss };
+  if (winProbLoss <= -1) return { type: "excellent", cpLoss: Math.round(evalDrop * 100), winProbLoss };
   return { type: "good", cpLoss: cpLossAbs, winProbLoss };
 }
 
