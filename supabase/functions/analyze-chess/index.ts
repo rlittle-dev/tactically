@@ -10,7 +10,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { stats, games, username } = await req.json();
+    const { stats, games, username, engineAnalysis } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -26,13 +26,19 @@ serve(async (req) => {
         opponentRating: opponent.rating,
         timeClass: g.time_class,
         moveCount,
-        pgn: g.pgn ? g.pgn.slice(-500) : null, // last portion of PGN for endgame analysis
+        pgn: g.pgn ? g.pgn.slice(-500) : null,
       };
     });
 
-    const prompt = `You are an expert chess coach analyzing a Chess.com player's profile. Based on the data below, provide a detailed analysis.
+    // Include Stockfish engine data if available
+    const engineContext = engineAnalysis
+      ? `\n\nSTOCKFISH ENGINE ANALYSIS:\n${engineAnalysis}\n\nIMPORTANT: Use the engine data above to ground your analysis. The accuracy percentages and identified blunders/mistakes are from Stockfish — reference these specific findings when identifying weaknesses and strengths. Your recommendations should directly address the patterns found by the engine.`
+      : "";
+
+    const prompt = `You are an expert chess coach analyzing a Chess.com player's profile. Based on the data below, provide a detailed analysis grounded in engine findings.
 
 PLAYER: ${username}
+${engineContext}
 
 STATS:
 - Rapid: ${stats.chess_rapid ? `Rating ${stats.chess_rapid.last.rating}, Best ${stats.chess_rapid.best.rating}, W/L/D: ${stats.chess_rapid.record.win}/${stats.chess_rapid.record.loss}/${stats.chess_rapid.record.draw}` : "N/A"}

@@ -42,15 +42,25 @@ const InsightsPanel = ({ stats, games, username }: Props) => {
   const [analysis, setAnalysis] = useState<AIAnalysis | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [enginePhase, setEnginePhase] = useState<{ current: number; total: number } | null>(null);
+  const [phase, setPhase] = useState<"engine" | "ai" | "done">("engine");
 
   useEffect(() => {
     let cancelled = false;
     const run = async () => {
       setLoading(true);
       setError(null);
+      setPhase("engine");
       try {
-        const result = await fetchAIAnalysis(username, stats, games);
-        if (!cancelled) setAnalysis(result);
+        const result = await fetchAIAnalysis(
+          username, stats, games,
+          (current, total) => { if (!cancelled) setEnginePhase({ current, total }); },
+          (p) => { if (!cancelled) { setPhase(p); if (p === "ai") setEnginePhase(null); } }
+        );
+        if (!cancelled) {
+          setPhase("done");
+          setAnalysis(result);
+        }
       } catch (e: any) {
         if (!cancelled) setError(e.message || "Analysis failed");
       } finally {
@@ -82,7 +92,25 @@ const InsightsPanel = ({ stats, games, username }: Props) => {
           >
             <Loader2 className="h-6 w-6 text-muted-foreground" />
           </motion.div>
-          <p className="text-sm text-muted-foreground font-display italic">Analyzing your games…</p>
+          {enginePhase ? (
+            <>
+              <p className="text-sm text-muted-foreground font-display italic">
+                Analyzing game {enginePhase.current} of {enginePhase.total} with Stockfish…
+              </p>
+              <div className="w-48 bg-accent/30 rounded-full h-1.5 overflow-hidden">
+                <motion.div
+                  className="h-full bg-foreground/60 rounded-full"
+                  initial={{ width: "0%" }}
+                  animate={{ width: `${(enginePhase.current / enginePhase.total) * 100}%` }}
+                  transition={{ duration: 0.3 }}
+                />
+              </div>
+            </>
+          ) : phase === "ai" ? (
+            <p className="text-sm text-muted-foreground font-display italic">Generating AI coaching insights…</p>
+          ) : (
+            <p className="text-sm text-muted-foreground font-display italic">Initializing engine analysis…</p>
+          )}
         </motion.div>
       )}
 
