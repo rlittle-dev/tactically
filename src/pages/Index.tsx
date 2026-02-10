@@ -122,7 +122,7 @@ const Index = () => {
             {/* Chart + Recent Games - stacked on single col, side by side on lg */}
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
               <div className="lg:col-span-3">
-                <RatingChart games={games} username={username} />
+                <RatingChart games={games} username={username} stats={stats} />
               </div>
               <div className="lg:col-span-2">
                 <RecentGames games={games} username={username} />
