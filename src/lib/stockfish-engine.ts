@@ -14,20 +14,42 @@ export interface StockfishEval {
 }
 
 export interface MoveClassification {
-  type: "blunder" | "mistake" | "inaccuracy" | "good" | "excellent" | "book";
+  type: "blunder" | "mistake" | "inaccuracy" | "good" | "excellent" | "brilliant" | "book";
   cpLoss: number;
+  winProbLoss: number; // win probability percentage points lost
 }
 
+/**
+ * Convert centipawn score to win probability (0-100) using chess.com-style sigmoid.
+ * Score should be from white's perspective.
+ */
+export function cpToWinProb(cp: number): number {
+  return 50 + 50 * (2 / (1 + Math.exp(-0.00368208 * cp)) - 1);
+}
+
+/**
+ * Classify a move based on win probability loss (chess.com style thresholds).
+ */
 export function classifyMove(prevScore: number, currentScore: number, isWhiteTurn: boolean): MoveClassification {
+  const prevWinProb = cpToWinProb(prevScore);
+  const currWinProb = cpToWinProb(currentScore);
+
+  // Win prob loss from the moving player's perspective
+  const winProbLoss = isWhiteTurn
+    ? prevWinProb - currWinProb
+    : (100 - prevWinProb) - (100 - currWinProb); // i.e. currWinProb - prevWinProb for black's benefit
+
   const delta = isWhiteTurn
     ? prevScore - currentScore
     : currentScore - prevScore;
 
-  if (delta >= 200) return { type: "blunder", cpLoss: delta };
-  if (delta >= 100) return { type: "mistake", cpLoss: delta };
-  if (delta >= 50) return { type: "inaccuracy", cpLoss: delta };
-  if (delta <= -50) return { type: "excellent", cpLoss: delta };
-  return { type: "good", cpLoss: delta };
+  // Chess.com-style thresholds based on win probability loss
+  if (winProbLoss >= 20) return { type: "blunder", cpLoss: Math.max(0, delta), winProbLoss };
+  if (winProbLoss >= 10) return { type: "mistake", cpLoss: Math.max(0, delta), winProbLoss };
+  if (winProbLoss >= 5) return { type: "inaccuracy", cpLoss: Math.max(0, delta), winProbLoss };
+  if (winProbLoss <= -5) return { type: "brilliant", cpLoss: delta, winProbLoss };
+  if (winProbLoss <= -1) return { type: "excellent", cpLoss: delta, winProbLoss };
+  return { type: "good", cpLoss: Math.max(0, delta), winProbLoss };
 }
 
 const STOCKFISH_PATH = "/stockfish/stockfish-asm.js";
