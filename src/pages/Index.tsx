@@ -250,20 +250,26 @@ const Index = () => {
               {/* ── Sample Players ── */}
               <RevealSection className="text-center space-y-4">
                 <p className="text-xs tracking-[0.15em] uppercase text-muted-foreground">Try a sample player</p>
-                <div className="flex flex-wrap justify-center gap-2">
-                  {["hikaru", "GothamChess", "MagnusCarlsen", "AnishGiri"].map((name, i) => (
+              <div className="flex flex-wrap justify-center gap-2">
+                  {[
+                    { username: "hikaru", display: "Hikaru", avatar: "https://images.chesscomfiles.com/uploads/v1/user/15448422.b6401265.50x50o.831ef3c4faa0.png" },
+                    { username: "GothamChess", display: "Gotham Chess", avatar: "https://images.chesscomfiles.com/uploads/v1/user/49777928.8cae6ea0.50x50o.b1a3bfe4206d.png" },
+                    { username: "MagnusCarlsen", display: "Magnus Carlsen", avatar: "https://images.chesscomfiles.com/uploads/v1/user/81726526.eb721fa8.50x50o.34a4ed4554d5.png" },
+                    { username: "AnishGiri", display: "Anish Giri", avatar: "https://images.chesscomfiles.com/uploads/v1/user/33092908.14ceca84.50x50o.77a32e9d5766.png" },
+                  ].map((player, i) => (
                     <motion.button
-                      key={name}
+                      key={player.username}
                       initial={{ opacity: 0, y: 12 }}
                       whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: false }}
                       transition={{ delay: 0.1 + i * 0.06, duration: 0.5 }}
                       whileHover={{ scale: 1.08, borderColor: "hsl(0 0% 30%)" }}
                       whileTap={{ scale: 0.95 }}
-                      onClick={() => handleSearch(name)}
-                      className="px-5 py-2.5 rounded-lg border border-border/60 bg-card/50 backdrop-blur-sm text-sm text-muted-foreground hover:text-foreground transition-all font-display italic"
+                      onClick={() => handleSearch(player.username)}
+                      className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-border/60 bg-card/50 backdrop-blur-sm text-sm text-muted-foreground hover:text-foreground transition-all font-display italic"
                     >
-                      {name}
+                      <img src={player.avatar} alt={player.display} className="w-5 h-5 rounded-full object-cover" />
+                      {player.display}
                     </motion.button>
                   ))}
                 </div>
