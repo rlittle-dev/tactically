@@ -230,9 +230,9 @@ const PlayerAvatar = ({ username, display }: { username: string; display: string
           )}
         </AnimatePresence>
 
-        <motion.div layout transition={{ type: "spring", stiffness: 300, damping: 30 }} className="mb-12">
+        <div className="mb-12">
           <UsernameSearch onSearch={handleSearch} loading={loading} />
-        </motion.div>
+        </div>
 
         <AnimatePresence>
           {showLanding && (
