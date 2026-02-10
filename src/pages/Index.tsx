@@ -2,9 +2,9 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import {
   Clock, Zap, Gauge, RotateCcw, Github, Linkedin, TrendingUp, Brain, History,
-  Share2, BookOpen, FileText, Puzzle, BarChart3, Shield, Sparkles, ChevronRight,
+  Share2, BookOpen, FileText, Puzzle, BarChart3, Sparkles, ChevronRight,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import UsernameSearch from "@/components/UsernameSearch";
 import ProfileHeader from "@/components/ProfileHeader";
 import RatingCard from "@/components/RatingCard";
@@ -17,14 +17,51 @@ import PgnUpload from "@/components/PgnUpload";
 import ProfileCardModal from "@/components/ProfileCardModal";
 import { ChessProfile, ChessStats, RecentGame, fetchProfile, fetchStats, fetchRecentGames } from "@/lib/chess-api";
 
-const stagger = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.08, delayChildren: 0.3 } },
-};
-const fadeUp = {
-  hidden: { opacity: 0, y: 20, filter: "blur(8px)" },
-  show: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] as const } },
-};
+/* ── Scroll-triggered section wrapper ── */
+const RevealSection = ({
+  children,
+  className = "",
+  delay = 0,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  delay?: number;
+}) => (
+  <motion.div
+    initial={{ opacity: 0, y: 40, filter: "blur(10px)" }}
+    whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+    viewport={{ once: true, margin: "-60px" }}
+    transition={{ duration: 0.8, delay, ease: [0.25, 0.46, 0.45, 0.94] as const }}
+    className={className}
+  >
+    {children}
+  </motion.div>
+);
+
+/* ── Staggered grid children ── */
+const RevealItem = ({
+  children,
+  className = "",
+  index = 0,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  index?: number;
+}) => (
+  <motion.div
+    initial={{ opacity: 0, y: 30, scale: 0.96, filter: "blur(6px)" }}
+    whileInView={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+    viewport={{ once: true, margin: "-40px" }}
+    transition={{
+      duration: 0.6,
+      delay: index * 0.06,
+      ease: [0.25, 0.46, 0.45, 0.94] as const,
+    }}
+    className={className}
+  >
+    {children}
+  </motion.div>
+);
 
 const FEATURES = [
   { icon: <TrendingUp className="h-5 w-5" />, title: "Rating Trends", desc: "Interactive charts tracking your Elo across Rapid, Blitz & Bullet with date-based timelines" },
@@ -53,6 +90,11 @@ const Index = () => {
   const [games, setGames] = useState<RecentGame[]>([]);
   const [username, setUsername] = useState("");
   const [profileCardUsername, setProfileCardUsername] = useState<string | null>(null);
+
+  const { scrollYProgress } = useScroll();
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.12], [1, 0]);
+  const heroScale = useTransform(scrollYProgress, [0, 0.12], [1, 0.97]);
+  const heroY = useTransform(scrollYProgress, [0, 0.12], [0, -30]);
 
   useEffect(() => {
     if (routeUsername) setProfileCardUsername(routeUsername);
@@ -93,10 +135,17 @@ const Index = () => {
       <div className="absolute inset-0 bottom-auto pointer-events-none" style={{ bottom: 0 }}>
         <div className="chess-pattern" style={{ position: "absolute", inset: 0 }} />
         <motion.div
-          animate={{ opacity: [0.03, 0.06, 0.03], scale: [1, 1.1, 1] }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full"
-          style={{ background: "radial-gradient(circle, hsl(0 0% 100% / 0.06) 0%, transparent 70%)" }}
+          animate={{ opacity: [0.03, 0.07, 0.03], scale: [1, 1.15, 1] }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[800px] rounded-full"
+          style={{ background: "radial-gradient(circle, hsl(0 0% 100% / 0.07) 0%, transparent 60%)" }}
+        />
+        {/* Secondary ambient orb */}
+        <motion.div
+          animate={{ opacity: [0.02, 0.05, 0.02], x: [0, 40, 0], y: [0, -20, 0] }}
+          transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-[60%] left-1/3 w-[500px] h-[500px] rounded-full"
+          style={{ background: "radial-gradient(circle, hsl(0 0% 100% / 0.04) 0%, transparent 70%)" }}
         />
       </div>
 
@@ -138,22 +187,40 @@ const Index = () => {
       </motion.header>
 
       <main className="container max-w-5xl mx-auto px-4 py-16 relative z-10">
+        {/* ── HERO ── */}
         <AnimatePresence mode="wait">
           {showLanding && (
             <motion.div
               key="hero"
+              style={{ opacity: heroOpacity, scale: heroScale, y: heroY }}
               initial={{ opacity: 0, y: 30, filter: "blur(12px)" }}
               animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
               exit={{ opacity: 0, y: -20, filter: "blur(8px)" }}
               transition={{ duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
               className="text-center mb-14 space-y-6"
             >
-              <h2 className="text-5xl sm:text-7xl font-display italic font-light text-foreground leading-[1.1]">
-                Analyze Your <span className="text-gradient font-medium">Chess</span>, Tactically
-              </h2>
-              <p className="text-muted-foreground text-base sm:text-lg max-w-lg mx-auto leading-relaxed">
+              <motion.h2
+                className="text-5xl sm:text-7xl font-display italic font-light text-foreground leading-[1.1]"
+              >
+                Analyze Your{" "}
+                <motion.span
+                  className="text-gradient font-medium inline-block"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3, duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
+                >
+                  Chess
+                </motion.span>
+                , Tactically
+              </motion.h2>
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5, duration: 0.6 }}
+                className="text-muted-foreground text-base sm:text-lg max-w-lg mx-auto leading-relaxed"
+              >
                 Deep performance analytics powered by Stockfish 17 and AI coaching. Enter any Chess.com username for a complete breakdown.
-              </p>
+              </motion.p>
             </motion.div>
           )}
         </AnimatePresence>
@@ -166,100 +233,155 @@ const Index = () => {
           {showLanding && (
             <motion.div
               key="landing-content"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
               exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="space-y-16 mb-12"
+              transition={{ duration: 0.4 }}
+              className="space-y-24 mb-16"
             >
-              {/* Sample Players */}
-              <div className="text-center space-y-3">
+              {/* ── Sample Players ── */}
+              <RevealSection className="text-center space-y-4">
                 <p className="text-xs tracking-[0.15em] uppercase text-muted-foreground">Try a sample player</p>
                 <div className="flex flex-wrap justify-center gap-2">
-                  {["hikaru", "GothamChess", "MagnusCarlsen", "AnishGiri"].map((name) => (
+                  {["hikaru", "GothamChess", "MagnusCarlsen", "AnishGiri"].map((name, i) => (
                     <motion.button
                       key={name}
-                      whileHover={{ scale: 1.05 }}
+                      initial={{ opacity: 0, y: 12 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: 0.1 + i * 0.06, duration: 0.5 }}
+                      whileHover={{ scale: 1.08, borderColor: "hsl(0 0% 30%)" }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => handleSearch(name)}
-                      className="px-4 py-2 rounded-lg border border-border/60 bg-card/50 backdrop-blur-sm text-sm text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors font-display italic"
+                      className="px-5 py-2.5 rounded-lg border border-border/60 bg-card/50 backdrop-blur-sm text-sm text-muted-foreground hover:text-foreground transition-all font-display italic"
                     >
                       {name}
                     </motion.button>
                   ))}
                 </div>
-              </div>
+              </RevealSection>
 
-              {/* How It Works */}
-              <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-5">
-                <motion.h3 variants={fadeUp} className="text-xs tracking-[0.15em] uppercase text-muted-foreground text-center">
-                  How It Works
-                </motion.h3>
+              {/* ── Divider ── */}
+              <motion.div
+                initial={{ scaleX: 0 }}
+                whileInView={{ scaleX: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 1, ease: [0.25, 0.46, 0.45, 0.94] as const }}
+                className="h-px bg-gradient-to-r from-transparent via-border to-transparent max-w-md mx-auto"
+              />
+
+              {/* ── How It Works ── */}
+              <RevealSection className="space-y-8">
+                <div className="text-center space-y-2">
+                  <h3 className="text-xs tracking-[0.15em] uppercase text-muted-foreground">How It Works</h3>
+                  <p className="text-sm text-muted-foreground/60">Three steps to your full chess breakdown</p>
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl mx-auto">
                   {STEPS.map((step, i) => (
-                    <motion.div
-                      key={step.num}
-                      variants={fadeUp}
-                      className="relative flex flex-col items-center text-center gap-2 p-6 rounded-xl border border-border/40 bg-card/30 backdrop-blur-sm"
-                    >
-                      <span className="text-3xl font-display italic text-foreground/15 absolute top-3 left-4">{step.num}</span>
-                      <h4 className="text-sm font-display italic font-medium text-foreground mt-2">{step.title}</h4>
-                      <p className="text-xs text-muted-foreground leading-relaxed">{step.desc}</p>
+                    <RevealItem key={step.num} index={i} className="relative">
+                      <motion.div
+                        whileHover={{
+                          y: -4,
+                          borderColor: "hsl(0 0% 24%)",
+                          boxShadow: "0 8px 30px hsl(0 0% 100% / 0.03)",
+                        }}
+                        transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                        className="flex flex-col items-center text-center gap-2.5 p-7 rounded-xl border border-border/40 bg-card/30 backdrop-blur-sm h-full"
+                      >
+                        <span className="text-4xl font-display italic text-foreground/10 absolute top-4 left-5">{step.num}</span>
+                        <h4 className="text-sm font-display italic font-medium text-foreground mt-3">{step.title}</h4>
+                        <p className="text-xs text-muted-foreground leading-relaxed">{step.desc}</p>
+                      </motion.div>
                       {i < STEPS.length - 1 && (
-                        <ChevronRight className="hidden sm:block absolute -right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/30" />
+                        <ChevronRight className="hidden sm:block absolute -right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/20" />
                       )}
-                    </motion.div>
+                    </RevealItem>
                   ))}
                 </div>
-              </motion.div>
+              </RevealSection>
 
-              {/* Feature Grid */}
-              <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-5">
-                <motion.div variants={fadeUp} className="text-center space-y-2">
+              {/* ── Divider ── */}
+              <motion.div
+                initial={{ scaleX: 0 }}
+                whileInView={{ scaleX: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 1, ease: [0.25, 0.46, 0.45, 0.94] as const }}
+                className="h-px bg-gradient-to-r from-transparent via-border to-transparent max-w-md mx-auto"
+              />
+
+              {/* ── Feature Grid ── */}
+              <RevealSection className="space-y-8">
+                <div className="text-center space-y-2">
                   <h3 className="text-xs tracking-[0.15em] uppercase text-muted-foreground">Everything You Need</h3>
-                  <p className="text-sm text-muted-foreground/70 max-w-md mx-auto">
+                  <p className="text-sm text-muted-foreground/60 max-w-md mx-auto">
                     A complete chess analytics suite — completely free, no sign-up required
                   </p>
-                </motion.div>
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                  {FEATURES.map((f) => (
-                    <motion.div
-                      key={f.title}
-                      variants={fadeUp}
-                      whileHover={{ y: -3, transition: { type: "spring", stiffness: 400, damping: 25 } }}
-                      className="flex flex-col gap-2.5 p-5 rounded-xl border border-border/40 bg-card/30 backdrop-blur-sm group"
-                    >
-                      <div className="text-muted-foreground group-hover:text-foreground transition-colors">{f.icon}</div>
-                      <h4 className="text-sm font-display italic font-medium text-foreground">{f.title}</h4>
-                      <p className="text-xs text-muted-foreground leading-relaxed">{f.desc}</p>
-                    </motion.div>
+                  {FEATURES.map((f, i) => (
+                    <RevealItem key={f.title} index={i}>
+                      <motion.div
+                        whileHover={{
+                          y: -5,
+                          borderColor: "hsl(0 0% 24%)",
+                          boxShadow: "0 12px 40px hsl(0 0% 100% / 0.04)",
+                        }}
+                        transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                        className="flex flex-col gap-3 p-5 rounded-xl border border-border/40 bg-card/30 backdrop-blur-sm group h-full"
+                      >
+                        <motion.div
+                          className="text-muted-foreground group-hover:text-foreground transition-colors duration-300"
+                          whileHover={{ rotate: [0, -8, 8, 0] }}
+                          transition={{ duration: 0.4 }}
+                        >
+                          {f.icon}
+                        </motion.div>
+                        <h4 className="text-sm font-display italic font-medium text-foreground">{f.title}</h4>
+                        <p className="text-xs text-muted-foreground leading-relaxed">{f.desc}</p>
+                      </motion.div>
+                    </RevealItem>
                   ))}
                 </div>
-              </motion.div>
+              </RevealSection>
 
-              {/* PGN Upload */}
-              <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-5">
-                <motion.h3 variants={fadeUp} className="text-xs tracking-[0.15em] uppercase text-muted-foreground text-center">
-                  Or Analyze Any Game
-                </motion.h3>
-                <motion.div variants={fadeUp} className="max-w-lg mx-auto">
+              {/* ── Divider ── */}
+              <motion.div
+                initial={{ scaleX: 0 }}
+                whileInView={{ scaleX: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 1, ease: [0.25, 0.46, 0.45, 0.94] as const }}
+                className="h-px bg-gradient-to-r from-transparent via-border to-transparent max-w-md mx-auto"
+              />
+
+              {/* ── PGN Upload ── */}
+              <RevealSection className="space-y-6">
+                <div className="text-center space-y-2">
+                  <h3 className="text-xs tracking-[0.15em] uppercase text-muted-foreground">Or Analyze Any Game</h3>
+                  <p className="text-sm text-muted-foreground/60">Paste a PGN or FEN for the same deep analysis</p>
+                </div>
+                <div className="max-w-lg mx-auto">
                   <PgnUpload />
-                </motion.div>
-              </motion.div>
+                </div>
+              </RevealSection>
 
-              {/* Tech stack badge row */}
-              <motion.div variants={stagger} initial="hidden" animate="show" className="text-center space-y-3">
-                <motion.p variants={fadeUp} className="text-xs tracking-[0.15em] uppercase text-muted-foreground">
-                  Powered By
-                </motion.p>
-                <motion.div variants={fadeUp} className="flex flex-wrap justify-center gap-2">
-                  {["Stockfish 17 NNUE", "Gemini AI", "Chess.com API", "Lichess"].map((t) => (
-                    <span key={t} className="px-3 py-1.5 rounded-lg border border-border/40 bg-card/20 text-xs text-muted-foreground font-mono">
+              {/* ── Powered By ── */}
+              <RevealSection className="text-center space-y-4">
+                <p className="text-xs tracking-[0.15em] uppercase text-muted-foreground">Powered By</p>
+                <div className="flex flex-wrap justify-center gap-2">
+                  {["Stockfish 17 NNUE", "Gemini AI", "Chess.com API", "Lichess"].map((t, i) => (
+                    <motion.span
+                      key={t}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      whileInView={{ opacity: 1, scale: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: i * 0.08, duration: 0.4 }}
+                      className="px-3.5 py-1.5 rounded-lg border border-border/40 bg-card/20 text-xs text-muted-foreground font-mono hover:border-foreground/20 hover:text-foreground transition-colors"
+                    >
                       {t}
-                    </span>
+                    </motion.span>
                   ))}
-                </motion.div>
-              </motion.div>
+                </div>
+              </RevealSection>
             </motion.div>
           )}
         </AnimatePresence>
@@ -272,6 +394,7 @@ const Index = () => {
           )}
         </AnimatePresence>
 
+        {/* ── Dashboard ── */}
         {profile && stats && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }} className="space-y-6">
             <div className="flex items-center justify-between">
@@ -289,23 +412,27 @@ const Index = () => {
               <PuzzleCard stats={stats} />
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-              <div className="lg:col-span-3 space-y-4">
-                <RatingChart games={games} username={username} stats={stats} />
-                <TopOpenings games={games} username={username} />
+            <RevealSection>
+              <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+                <div className="lg:col-span-3 space-y-4">
+                  <RatingChart games={games} username={username} stats={stats} />
+                  <TopOpenings games={games} username={username} />
+                </div>
+                <div className="lg:col-span-2">
+                  <RecentGames games={games} username={username} />
+                </div>
               </div>
-              <div className="lg:col-span-2">
-                <RecentGames games={games} username={username} />
-              </div>
-            </div>
+            </RevealSection>
 
-            <InsightsPanel stats={stats} games={games} username={username} />
+            <RevealSection>
+              <InsightsPanel stats={stats} games={games} username={username} />
+            </RevealSection>
           </motion.div>
         )}
       </main>
 
       <footer className="relative z-10 border-t border-border/50 bg-background mt-auto">
-        <div className="container max-w-5xl mx-auto px-4 py-8 flex flex-col items-center gap-4 text-sm text-muted-foreground">
+        <RevealSection className="container max-w-5xl mx-auto px-4 py-8 flex flex-col items-center gap-4 text-sm text-muted-foreground">
           <div className="flex items-center gap-5">
             <a href="https://github.com/rlittle-dev/tactically" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
               <Github className="h-5 w-5" />
@@ -321,7 +448,7 @@ const Index = () => {
             <span>·</span>
             <span>MIT License</span>
           </div>
-        </div>
+        </RevealSection>
       </footer>
 
       {profileCardUsername && (
