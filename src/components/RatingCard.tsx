@@ -10,9 +10,11 @@ interface Props {
 }
 
 const RatingCard = ({ label, icon, stats, delay = 0 }: Props) => {
-  if (!stats) return null;
+  if (!stats?.last?.rating && !stats?.best?.rating) return null;
 
-  const { last, best, record } = stats;
+  const last = stats.last ?? { rating: 0 };
+  const best = stats.best ?? { rating: 0 };
+  const record = stats.record ?? { win: 0, loss: 0, draw: 0 };
   const total = record.win + record.loss + record.draw;
   const winRate = total > 0 ? ((record.win / total) * 100).toFixed(1) : "0";
 
