@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Clock, Zap, Gauge, RotateCcw, Github, Linkedin, TrendingUp, Brain, History } from "lucide-react";
+import { Clock, Zap, Gauge, RotateCcw, Github, Linkedin, TrendingUp, Brain, History, Share2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import UsernameSearch from "@/components/UsernameSearch";
 import ProfileHeader from "@/components/ProfileHeader";
@@ -9,6 +9,7 @@ import RecentGames from "@/components/RecentGames";
 import RatingChart from "@/components/RatingChart";
 import InsightsPanel from "@/components/InsightsPanel";
 import PgnUpload from "@/components/PgnUpload";
+import ProfileCardModal from "@/components/ProfileCardModal";
 import {
   ChessProfile, ChessStats, RecentGame,
   fetchProfile, fetchStats, fetchRecentGames,
@@ -21,6 +22,7 @@ const Index = () => {
   const [stats, setStats] = useState<ChessStats | null>(null);
   const [games, setGames] = useState<RecentGame[]>([]);
   const [username, setUsername] = useState("");
+  const [profileCardUsername, setProfileCardUsername] = useState<string | null>(null);
 
   const handleSearch = async (name: string) => {
     setLoading(true);
@@ -169,7 +171,7 @@ const Index = () => {
                       key={name}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      onClick={() => handleSearch(name)}
+                      onClick={() => setProfileCardUsername(name)}
                       className="px-4 py-2 rounded-lg border border-border/60 bg-card/50 backdrop-blur-sm text-sm text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors font-display italic"
                     >
                       {name}
@@ -216,7 +218,20 @@ const Index = () => {
             transition={{ duration: 0.3 }}
             className="space-y-6"
           >
-            <ProfileHeader profile={profile} />
+            <div className="flex items-center justify-between">
+              <ProfileHeader profile={profile} />
+              <motion.button
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setProfileCardUsername(username)}
+                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-lg border border-border/60 hover:border-foreground/30 shrink-0"
+              >
+                <Share2 className="h-4 w-4" />
+                Share Card
+              </motion.button>
+            </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <RatingCard label="Rapid" icon={<Clock className="h-5 w-5" />} stats={stats.chess_rapid} delay={100} />
@@ -252,6 +267,13 @@ const Index = () => {
           <span>Powered by the Chess.com Public API</span>
         </div>
       </footer>
+
+      {profileCardUsername && (
+        <ProfileCardModal
+          username={profileCardUsername}
+          onClose={() => setProfileCardUsername(null)}
+        />
+      )}
     </div>
   );
 };
