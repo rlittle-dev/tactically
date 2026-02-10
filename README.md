@@ -26,7 +26,7 @@ A sleek, real-time chess analytics dashboard that connects to the Chess.com API 
 | Styling | Tailwind CSS, Framer Motion |
 | Charts | Recharts |
 | Backend | Lovable Cloud (Edge Functions) |
-| AI | Gemini 3 Flash (via Lovable AI) |
+| AI | Gemini 3 Flash (absorbing S17) |
 | Engine | Stockfish 17 NNUE (via chess-api.com, depth 16) |
 | Data Source | Chess.com Public API |
 
