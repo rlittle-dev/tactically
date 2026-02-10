@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { Clock, Zap, Gauge, RotateCcw, Github, Linkedin, TrendingUp, Brain, History, Share2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import UsernameSearch from "@/components/UsernameSearch";
@@ -16,6 +17,8 @@ import {
 } from "@/lib/chess-api";
 
 const Index = () => {
+  const { username: routeUsername } = useParams<{ username: string }>();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [profile, setProfile] = useState<ChessProfile | null>(null);
@@ -23,6 +26,13 @@ const Index = () => {
   const [games, setGames] = useState<RecentGame[]>([]);
   const [username, setUsername] = useState("");
   const [profileCardUsername, setProfileCardUsername] = useState<string | null>(null);
+
+  // Auto-open profile card when navigating to /player/:username
+  useEffect(() => {
+    if (routeUsername) {
+      setProfileCardUsername(routeUsername);
+    }
+  }, [routeUsername]);
 
   const handleSearch = async (name: string) => {
     setLoading(true);
@@ -271,7 +281,10 @@ const Index = () => {
       {profileCardUsername && (
         <ProfileCardModal
           username={profileCardUsername}
-          onClose={() => setProfileCardUsername(null)}
+          onClose={() => {
+            setProfileCardUsername(null);
+            if (routeUsername) navigate("/");
+          }}
         />
       )}
     </div>

@@ -27,12 +27,11 @@ export function useShareAsImage() {
     }
   }, []);
 
-  const copyShareLink = useCallback((path: string = "") => {
-    const url = `${SITE_URL}${path}`;
+  const copyShareLink = useCallback((path: string = "/") => {
+    const url = path.startsWith("http") ? path : `${SITE_URL}${path}`;
     navigator.clipboard.writeText(url).then(() => {
       toast.success("Link copied to clipboard!");
     }).catch(() => {
-      // Fallback
       const input = document.createElement("input");
       input.value = url;
       document.body.appendChild(input);

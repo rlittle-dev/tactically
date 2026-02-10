@@ -174,7 +174,7 @@ const GameAnalysisModal = (props: Props) => {
               {analysis && (
                 <ShareButtons
                   onDownload={() => downloadImage("tactically-analysis")}
-                  onShare={() => copyShareLink()}
+                  onShare={() => copyShareLink(gameUrl ? gameUrl : "/")}
                   compact
                 />
               )}
