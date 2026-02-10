@@ -152,14 +152,13 @@ export async function evaluateGame(
     const cpLoss = playerBefore - playerAfter;
     
     // If the move maintained or improved position
-    if (cpLoss <= 5) return 100;    // ≤5cp = engine-level
-    if (cpLoss <= 15) return 95;    // ~0.1 pawn = excellent
-    if (cpLoss <= 25) return 87;    // ~0.2 pawns = good
+    if (cpLoss <= 3) return 100;    // ≤3cp = engine-level
+    if (cpLoss <= 10) return 93;    // ~0.1 pawn = excellent
+    if (cpLoss <= 20) return 83;    // ~0.2 pawns = good
     
-    // Balanced exponential decay for meaningful mistakes
-    // 30cp → 80, 50cp → 60, 75cp → 42, 100cp → 28, 150cp → 12, 200cp → 5, 300cp+ → ~0
-    // Targets: 800 ≈ 45-65%, 1500 ≈ 65-80%, GM ≈ 85-95%
-    const raw = 103.1668 * Math.exp(-0.0085 * cpLoss) - 3.1669;
+    // Balanced exponential decay
+    // 30cp → 72, 50cp → 52, 75cp → 33, 100cp → 20, 150cp → 7, 200cp → 2
+    const raw = 103.1668 * Math.exp(-0.011 * cpLoss) - 3.1669;
     return Math.max(0, Math.min(100, raw));
   };
 
