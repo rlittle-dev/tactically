@@ -119,10 +119,14 @@ const Index = () => {
               <PuzzleCard stats={stats} />
             </div>
 
-            {/* Chart + Recent Games */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <RatingChart games={games} username={username} />
-              <RecentGames games={games} username={username} />
+            {/* Chart + Recent Games - stacked on single col, side by side on lg */}
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+              <div className="lg:col-span-3">
+                <RatingChart games={games} username={username} />
+              </div>
+              <div className="lg:col-span-2">
+                <RecentGames games={games} username={username} />
+              </div>
             </div>
 
             {/* Insights */}

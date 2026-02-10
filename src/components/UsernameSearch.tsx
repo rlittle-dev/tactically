@@ -25,7 +25,7 @@ const UsernameSearch = ({ onSearch, loading }: Props) => {
             value={value}
             onChange={(e) => setValue(e.target.value)}
             placeholder="Enter Chess.com username"
-            className="flex-1 bg-transparent px-3 py-3.5 text-foreground placeholder:text-muted-foreground outline-none font-mono text-sm"
+            className="flex-1 bg-transparent px-3 py-3.5 text-foreground placeholder:text-muted-foreground outline-none text-sm tracking-wide"
             disabled={loading}
           />
           <button

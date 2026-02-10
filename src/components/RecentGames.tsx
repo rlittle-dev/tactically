@@ -15,7 +15,7 @@ const timeClassIcon: Record<string, React.ReactNode> = {
 const resultConfig = {
   win: { icon: <Trophy className="h-4 w-4" />, color: "text-success", bg: "bg-success/10", label: "W" },
   loss: { icon: <X className="h-4 w-4" />, color: "text-destructive", bg: "bg-destructive/10", label: "L" },
-  draw: { icon: <Minus className="h-4 w-4" />, color: "text-chart-draw", bg: "bg-muted", label: "D" },
+  draw: { icon: <Minus className="h-4 w-4" />, color: "text-muted-foreground", bg: "bg-muted", label: "D" },
 };
 
 const RecentGames = ({ games, username }: Props) => {
@@ -23,8 +23,8 @@ const RecentGames = ({ games, username }: Props) => {
 
   return (
     <div className="bg-card border border-border rounded-lg p-5 opacity-0 animate-fade-in" style={{ animationDelay: "400ms" }}>
-      <h3 className="text-lg font-display italic font-semibold text-foreground mb-4">Recent Matches</h3>
-      <div className="space-y-2">
+      <h3 className="text-xs uppercase tracking-[0.15em] text-muted-foreground mb-4">Recent Matches</h3>
+      <div className="space-y-1">
         {games.map((game, i) => {
           const result = getResult(game, username);
           const cfg = resultConfig[result];
@@ -39,13 +39,13 @@ const RecentGames = ({ games, username }: Props) => {
               href={game.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-secondary/80 transition-colors group"
+              className="flex items-center gap-3 px-3 py-2 rounded hover:bg-secondary/80 transition-colors group"
             >
               <div className={`p-1.5 rounded ${cfg.bg} ${cfg.color}`}>{cfg.icon}</div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-foreground truncate">{opponent}</span>
-                  <span className="text-xs font-mono text-muted-foreground">({oppRating})</span>
+                  <span className="text-sm text-foreground truncate">{opponent}</span>
+                  <span className="text-xs text-muted-foreground">({oppRating})</span>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1">
@@ -56,9 +56,7 @@ const RecentGames = ({ games, username }: Props) => {
                   <span>{date.toLocaleDateString()}</span>
                 </div>
               </div>
-              <div className="text-right">
-                <span className="text-sm font-mono text-foreground">{myRating}</span>
-              </div>
+              <span className="text-sm font-display italic text-foreground">{myRating}</span>
             </a>
           );
         })}
