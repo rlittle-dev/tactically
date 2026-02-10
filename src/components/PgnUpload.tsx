@@ -1,7 +1,31 @@
 import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { Upload, FileText, X } from "lucide-react";
+import { Chess } from "chess.js";
+import { toast } from "sonner";
 import GameAnalysisModal from "./GameAnalysisModal";
+
+function isValidPgnOrFen(input: string): boolean {
+  const trimmed = input.trim();
+  if (!trimmed) return false;
+
+  // Try as FEN
+  try {
+    const chess = new Chess();
+    chess.load(trimmed);
+    return true;
+  } catch {}
+
+  // Try as PGN
+  try {
+    const chess = new Chess();
+    chess.loadPgn(trimmed);
+    // Must have at least 1 move loaded
+    return chess.history().length > 0;
+  } catch {}
+
+  return false;
+}
 
 const PgnUpload = () => {
   const [pgn, setPgn] = useState("");
@@ -22,6 +46,10 @@ const PgnUpload = () => {
 
   const handleAnalyze = () => {
     if (!pgn.trim()) return;
+    if (!isValidPgnOrFen(pgn)) {
+      toast.error("Invalid input — please paste a valid PGN or FEN string");
+      return;
+    }
     setAnalyzing(true);
   };
 
