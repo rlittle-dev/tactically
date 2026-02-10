@@ -17,7 +17,7 @@ const ProfileHeader = ({ profile }: Props) => {
         {profile.avatar ? (
           <img src={profile.avatar} alt={profile.username} className="h-full w-full object-cover" />
         ) : (
-          <User className="h-8 w-8 text-primary" />
+          <User className="h-8 w-8 text-foreground" />
         )}
       </div>
       <div>
