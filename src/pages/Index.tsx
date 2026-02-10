@@ -26,18 +26,23 @@ const RevealSection = ({
   children: React.ReactNode;
   className?: string;
   delay?: number;
-}) => (
-  <motion.div
-    initial={{ opacity: 0, y: 40, filter: "blur(10px)" }}
-    animate={{ opacity: 0, y: 40, filter: "blur(10px)" }}
-    whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-    viewport={{ once: false, margin: "-60px" }}
-    transition={{ duration: 0.8, delay, ease: [0.25, 0.46, 0.45, 0.94] as const }}
-    className={className}
-  >
-    {children}
-  </motion.div>
-);
+}) => {
+  const variants = {
+    hidden: { opacity: 0, y: 40, filter: "blur(10px)" },
+    visible: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.8, delay, ease: [0.25, 0.46, 0.45, 0.94] as const } },
+  };
+  return (
+    <motion.div
+      variants={variants}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: false, margin: "-60px" }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+};
 
 /* ── Staggered grid children ── */
 const RevealItem = ({
@@ -48,22 +53,23 @@ const RevealItem = ({
   children: React.ReactNode;
   className?: string;
   index?: number;
-}) => (
-  <motion.div
-    initial={{ opacity: 0, y: 30, scale: 0.96, filter: "blur(6px)" }}
-    animate={{ opacity: 0, y: 30, scale: 0.96, filter: "blur(6px)" }}
-    whileInView={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
-    viewport={{ once: false, margin: "-40px" }}
-    transition={{
-      duration: 0.6,
-      delay: index * 0.06,
-      ease: [0.25, 0.46, 0.45, 0.94] as const,
-    }}
-    className={className}
-  >
-    {children}
-  </motion.div>
-);
+}) => {
+  const variants = {
+    hidden: { opacity: 0, y: 30, scale: 0.96, filter: "blur(6px)" },
+    visible: { opacity: 1, y: 0, scale: 1, filter: "blur(0px)", transition: { duration: 0.6, delay: index * 0.06, ease: [0.25, 0.46, 0.45, 0.94] as const } },
+  };
+  return (
+    <motion.div
+      variants={variants}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: false, margin: "-40px" }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+};
 
 const FEATURES = [
   { icon: <TrendingUp className="h-5 w-5" />, title: "Rating Trends", desc: "Interactive charts tracking your Elo across Rapid, Blitz & Bullet with date-based timelines" },
