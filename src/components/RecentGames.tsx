@@ -33,8 +33,9 @@ const item = {
 
 const RecentGames = ({ games, username }: Props) => {
   const [selectedGame, setSelectedGame] = useState<RecentGame | null>(null);
+  const displayGames = games.slice(0, 10);
 
-  if (!games.length) return null;
+  if (!displayGames.length) return null;
 
   return (
     <>
@@ -46,7 +47,7 @@ const RecentGames = ({ games, username }: Props) => {
       >
         <h3 className="text-xs uppercase tracking-[0.15em] text-muted-foreground mb-4">Recent Matches</h3>
         <motion.div className="space-y-1" variants={container} initial="hidden" animate="show">
-          {games.map((game, i) => {
+          {displayGames.map((game, i) => {
             const result = getResult(game, username);
             const cfg = resultConfig[result];
             const opponent = getOpponentName(game, username);
