@@ -90,76 +90,47 @@ export async function evaluateGame(
 
   engine.destroy();
 
-  // ── Lichess-exact game accuracy calculation ──
-  // Source: https://github.com/lichess-org/lila/blob/master/modules/analyse/src/main/AccuracyPercent.scala
-  //
-  // 1. Compute per-move accuracy using Lichess formula (with +1 uncertainty bonus)
-  // 2. Compute sliding window volatility weights (stddev of Win% in each window)
-  // 3. Game accuracy = average of (volatility-weighted mean, harmonic mean)
+  // ── Game accuracy calculation (chess.com CAPS-style) ──
+  // Per-move accuracy = how much of the player's winning chances they retained.
+  // moveAccuracy = min(100, winAfter / winBefore * 100)
+  // Game accuracy = simple average of all per-move accuracies for that color.
 
-  // Build full Win% sequence from white's perspective
   const allWinPercents = [cpToWinProb(startEval.score), ...evaluatedMoves.map((m) => cpToWinProb(m.score))];
-
-  const windowSize = Math.max(2, Math.min(8, Math.floor(evaluatedMoves.length / 10)));
-
-  // Build sliding windows (first few windows are padded with the initial window)
-  const paddingCount = Math.min(windowSize - 2, allWinPercents.length - windowSize);
-  const initialWindow = allWinPercents.slice(0, windowSize);
-  const windows = [
-    ...Array.from({ length: Math.max(0, paddingCount) }, () => initialWindow),
-    ...Array.from({ length: Math.max(0, allWinPercents.length - windowSize + 1) }, (_, i) =>
-      allWinPercents.slice(i, i + windowSize)
-    ),
-  ];
-
-  const stddev = (arr: number[]) => {
-    if (arr.length < 2) return 0;
-    const mean = arr.reduce((a, b) => a + b, 0) / arr.length;
-    return Math.sqrt(arr.reduce((s, x) => s + (x - mean) ** 2, 0) / arr.length);
-  };
-
-  const weights = windows.map((w) => Math.max(0.5, Math.min(12, stddev(w))));
-
-  // Per-move accuracy (Lichess formula, no inflation bonus)
-  const moveAccuracyFromWinPercents = (before: number, after: number, isWhite: boolean) => {
-    const winBefore = isWhite ? before : 100 - before;
-    const winAfter = isWhite ? after : 100 - after;
-    if (winAfter >= winBefore) return 100;
-    const winDiff = winBefore - winAfter;
-    const raw = 103.1668100711649 * Math.exp(-0.04354415386753951 * winDiff) + -3.166924740191411;
-    return Math.max(0, Math.min(100, raw));
-  };
 
   const calcGameAccuracy = (color: "w" | "b") => {
     const isWhite = color === "w";
-    const moveAccuracies: { accuracy: number; weight: number }[] = [];
+    const moveAccuracies: number[] = [];
 
     for (let i = 0; i < evaluatedMoves.length; i++) {
-      const moveColor = i % 2 === 0 ? "w" : "b"; // alternating from start
+      const moveColor = i % 2 === 0 ? "w" : "b";
       if (moveColor !== color) continue;
 
       const prevWP = allWinPercents[i];
       const currWP = allWinPercents[i + 1];
-      const acc = moveAccuracyFromWinPercents(prevWP, currWP, isWhite);
-      const w = weights[i] ?? 1;
-      moveAccuracies.push({ accuracy: acc, weight: w });
+
+      // Convert to moving player's perspective
+      const winBefore = isWhite ? prevWP : 100 - prevWP;
+      const winAfter = isWhite ? currWP : 100 - currWP;
+
+      // If player improved or maintained, 100% accuracy for this move
+      if (winAfter >= winBefore) {
+        moveAccuracies.push(100);
+        continue;
+      }
+
+      // Retention: what fraction of winning chances did they keep?
+      // Guard against division by near-zero (already lost position)
+      if (winBefore < 1) {
+        moveAccuracies.push(100); // can't lose what you don't have
+        continue;
+      }
+
+      const retention = (winAfter / winBefore) * 100;
+      moveAccuracies.push(Math.max(0, Math.min(100, retention)));
     }
 
     if (moveAccuracies.length === 0) return 100;
-
-    // Volatility-weighted mean
-    const totalWeight = moveAccuracies.reduce((s, m) => s + m.weight, 0);
-    const weightedMean = totalWeight > 0
-      ? moveAccuracies.reduce((s, m) => s + m.accuracy * m.weight, 0) / totalWeight
-      : 0;
-
-    // Harmonic mean (skip zeros to avoid division by zero)
-    const nonZero = moveAccuracies.filter((m) => m.accuracy > 0);
-    const harmonicMean = nonZero.length > 0
-      ? nonZero.length / nonZero.reduce((s, m) => s + 1 / m.accuracy, 0)
-      : 0;
-
-    return Math.round((weightedMean + harmonicMean) / 2);
+    return Math.round(moveAccuracies.reduce((a, b) => a + b, 0) / moveAccuracies.length);
   };
 
   const accuracy = {
