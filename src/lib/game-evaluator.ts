@@ -21,7 +21,7 @@ export interface GameEvaluation {
 export async function evaluateGame(
   pgn: string,
   onProgress?: (current: number, total: number) => void,
-  depth: number = 10
+  depth: number = 14
 ): Promise<GameEvaluation> {
   const chess = new Chess();
 
