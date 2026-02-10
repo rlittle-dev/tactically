@@ -2,3 +2,6 @@ project_id = "eodpivupnvtdxkbdqgye"
 
 [functions.analyze-chess]
 verify_jwt = false
+
+[functions.chess-eval]
+verify_jwt = false
