@@ -174,7 +174,7 @@ const MoveList = ({ moves }: { moves: EvaluatedMove[] }) => {
               <span className="text-muted-foreground capitalize">{m.classification.type}</span>
             </div>
             <span className="text-muted-foreground">
-              {m.classification.cpLoss > 0 ? `-${m.classification.cpLoss}cp` : ""}
+              {m.classification.winProbLoss > 0 ? `-${Math.round(m.classification.winProbLoss)}% win` : ""}
             </span>
           </div>
         );
