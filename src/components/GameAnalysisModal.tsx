@@ -72,7 +72,7 @@ const GameAnalysisModal = (props: Props) => {
   const [analysis, setAnalysis] = useState<GameAnalysis | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { captureRef, downloadImage, shareImage } = useShareAsImage();
+  const { captureRef, downloadImage, copyShareLink } = useShareAsImage();
 
   const isRawPgn = "rawPgn" in props && !!props.rawPgn;
 
@@ -174,7 +174,7 @@ const GameAnalysisModal = (props: Props) => {
               {analysis && (
                 <ShareButtons
                   onDownload={() => downloadImage("tactically-analysis")}
-                  onShare={() => shareImage("tactically-analysis")}
+                  onShare={() => copyShareLink()}
                   compact
                 />
               )}
