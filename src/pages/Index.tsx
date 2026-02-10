@@ -100,20 +100,6 @@ const Index = () => {
         />
       </div>
 
-      {/* Support Banner */}
-      <div className="bg-accent/60 backdrop-blur-sm border-b border-border/50 text-center py-2 px-4 text-xs text-muted-foreground relative z-50">
-        <span>Tactically is completely free — support the project via USDT (ERC-20): </span>
-        <button
-          onClick={() => {
-            navigator.clipboard.writeText("0x9F213F387cD443A26c3a48c7B9816A4c067E36DE");
-            import("sonner").then(({ toast }) => toast.success("Address copied to clipboard!"));
-          }}
-          className="font-mono text-foreground hover:underline underline-offset-2 transition-colors"
-        >
-          0x9F213F...6DE
-        </button>
-      </div>
-
       {/* Header */}
       <motion.header
         initial={{ opacity: 0, y: -10 }}
@@ -133,14 +119,19 @@ const Index = () => {
                 New Analysis
               </motion.button>
             ) : (
-              <motion.div key="nav" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-4">
-                <Link to="/docs" className="text-xs tracking-[0.15em] uppercase text-muted-foreground hover:text-foreground transition-colors hidden sm:block">
-                  Docs
-                </Link>
-                <a href="https://github.com/rlittle-dev/tactically" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors hidden sm:block">
-                  <Github className="h-4 w-4" />
-                </a>
-              </motion.div>
+              <motion.button
+                key="support"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => {
+                  navigator.clipboard.writeText("0x9F213F387cD443A26c3a48c7B9816A4c067E36DE");
+                  import("sonner").then(({ toast }) => toast.success("USDT address copied to clipboard!"));
+                }}
+                className="text-xs tracking-[0.12em] text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Support the Project ♡
+              </motion.button>
             )}
           </AnimatePresence>
         </div>
@@ -157,10 +148,6 @@ const Index = () => {
               transition={{ duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
               className="text-center mb-14 space-y-6"
             >
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border/60 bg-card/40 backdrop-blur-sm text-xs text-muted-foreground mb-2">
-                <Shield className="h-3 w-3" />
-                Free & open source — no account required
-              </div>
               <h2 className="text-5xl sm:text-7xl font-display italic font-light text-foreground leading-[1.1]">
                 Analyze Your <span className="text-gradient font-medium">Chess</span>, Tactically
               </h2>
