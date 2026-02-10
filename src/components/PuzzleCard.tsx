@@ -1,5 +1,6 @@
 import { ChessStats } from "@/lib/chess-api";
 import { Lightbulb, Flame, TrendingUp, TrendingDown } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface Props {
   stats: ChessStats;
@@ -14,18 +15,31 @@ const PuzzleCard = ({ stats }: Props) => {
   if (!highestRating && !rushBest) return null;
 
   return (
-    <div
-      className="bg-card border border-border rounded-lg p-5 card-hover opacity-0 animate-fade-in"
-      style={{ animationDelay: "300ms" }}
+    <motion.div
+      initial={{ opacity: 0, y: 30, filter: "blur(8px)" }}
+      animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+      transition={{ duration: 0.6, delay: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+      whileHover={{
+        y: -4,
+        transition: { type: "spring", stiffness: 400, damping: 25 },
+      }}
+      className="bg-card/80 backdrop-blur-xl border border-border rounded-xl p-5 cursor-default"
     >
       <div className="flex items-center gap-3 mb-4">
-        <div className="p-2 rounded-sm bg-foreground/5 text-foreground/60">
+        <div className="p-2 rounded-lg bg-foreground/5 text-foreground/60">
           <Lightbulb className="h-5 w-5" />
         </div>
         <div>
           <h3 className="text-xs uppercase tracking-[0.15em] text-muted-foreground">Puzzles</h3>
           {highestRating && (
-            <p className="text-3xl font-display italic font-light text-foreground">{highestRating}</p>
+            <motion.p
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.5 }}
+              className="text-3xl font-display italic font-light text-foreground"
+            >
+              {highestRating}
+            </motion.p>
           )}
         </div>
       </div>
@@ -58,7 +72,7 @@ const PuzzleCard = ({ stats }: Props) => {
           </div>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 };
 
