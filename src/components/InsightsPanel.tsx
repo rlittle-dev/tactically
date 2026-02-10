@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { ChessStats, RecentGame } from "@/lib/chess-api";
 import { AIAnalysis, fetchAIAnalysis } from "@/lib/ai-analysis";
-import { motion } from "framer-motion";
 import {
   AlertTriangle,
   Info,
@@ -56,14 +55,6 @@ const severityConfig = {
   },
 };
 
-const stagger = {
-  container: { transition: { staggerChildren: 0.08 } },
-  item: {
-    initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] as const } },
-  },
-};
-
 const InsightsPanel = ({ stats, games, username }: Props) => {
   const [analysis, setAnalysis] = useState<AIAnalysis | null>(null);
   const [loading, setLoading] = useState(false);
@@ -88,51 +79,28 @@ const InsightsPanel = ({ stats, games, username }: Props) => {
   }, [username, stats, games]);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 40 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.7, delay: 0.6, ease: [0.22, 1, 0.36, 1] }}
-      className="space-y-4"
-    >
+    <div className="space-y-4 opacity-0 animate-fade-in" style={{ animationDelay: "500ms" }}>
       <h3 className="text-xs uppercase tracking-[0.15em] text-muted-foreground">
         Profile Breakdown
       </h3>
 
       {loading && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="bg-card border border-border rounded-lg p-8 flex flex-col items-center gap-3"
-        >
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-          >
-            <Loader2 className="h-6 w-6 text-muted-foreground" />
-          </motion.div>
+        <div className="bg-card border border-border rounded-lg p-8 flex flex-col items-center gap-3">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           <p className="text-sm text-muted-foreground font-display italic">Analyzing your games…</p>
-        </motion.div>
+        </div>
       )}
 
       {error && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="bg-destructive/10 border border-destructive/30 rounded-lg p-4 text-sm text-destructive"
-        >
+        <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-4 text-sm text-destructive">
           {error}
-        </motion.div>
+        </div>
       )}
 
       {analysis && (
-        <motion.div
-          variants={stagger.container}
-          initial="initial"
-          animate="animate"
-          className="space-y-4"
-        >
+        <>
           {/* Overall Assessment */}
-          <motion.div variants={stagger.item} className="bg-card border border-border rounded-lg p-5">
+          <div className="bg-card border border-border rounded-lg p-5">
             <div className="flex items-start gap-3">
               <Sparkles className="h-5 w-5 text-muted-foreground mt-0.5 shrink-0" />
               <div>
@@ -142,35 +110,28 @@ const InsightsPanel = ({ stats, games, username }: Props) => {
                 </p>
               </div>
             </div>
-          </motion.div>
+          </div>
 
           {/* Strengths */}
           {analysis.strengths.length > 0 && (
-            <motion.div variants={stagger.item} className="bg-card border border-border rounded-lg p-5">
+            <div className="bg-card border border-border rounded-lg p-5">
               <h4 className="text-xs uppercase tracking-[0.15em] text-muted-foreground mb-3 flex items-center gap-2">
                 <CheckCircle className="h-3.5 w-3.5 text-success" /> Strengths
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {analysis.strengths.map((s, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.1 + i * 0.08 }}
-                    whileHover={{ scale: 1.02, transition: { duration: 0.15 } }}
-                    className="bg-success/5 border border-success/20 rounded-lg p-4"
-                  >
+                  <div key={i} className="bg-success/5 border border-success/20 rounded-lg p-4">
                     <p className="text-sm font-display italic text-foreground">{s.title}</p>
                     <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">{s.description}</p>
-                  </motion.div>
+                  </div>
                 ))}
               </div>
-            </motion.div>
+            </div>
           )}
 
           {/* Weaknesses */}
           {analysis.weaknesses.length > 0 && (
-            <motion.div variants={stagger.item} className="bg-card border border-border rounded-lg p-5">
+            <div className="bg-card border border-border rounded-lg p-5">
               <h4 className="text-xs uppercase tracking-[0.15em] text-muted-foreground mb-3 flex items-center gap-2">
                 <AlertTriangle className="h-3.5 w-3.5 text-destructive" /> Areas to Improve
               </h4>
@@ -178,13 +139,7 @@ const InsightsPanel = ({ stats, games, username }: Props) => {
                 {analysis.weaknesses.map((w, i) => {
                   const cfg = severityConfig[w.severity] || severityConfig.medium;
                   return (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.15 + i * 0.1 }}
-                      className={`border ${cfg.border} rounded-lg p-4 ${cfg.bg}`}
-                    >
+                    <div key={i} className={`border ${cfg.border} rounded-lg p-4 ${cfg.bg}`}>
                       <div className="flex items-start gap-3">
                         <div className={`${cfg.text} mt-0.5 shrink-0`}>
                           {categoryIcons[w.category] || cfg.icon}
@@ -203,9 +158,8 @@ const InsightsPanel = ({ stats, games, username }: Props) => {
                           {w.lichess_themes.length > 0 && (
                             <div className="flex flex-wrap gap-1.5 mt-2.5">
                               {w.lichess_themes.map((theme) => (
-                                <motion.a
+                                <a
                                   key={theme}
-                                  whileHover={{ scale: 1.05 }}
                                   href={`https://lichess.org/training/${theme}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
@@ -213,51 +167,47 @@ const InsightsPanel = ({ stats, games, username }: Props) => {
                                 >
                                   {theme}
                                   <ExternalLink className="h-3 w-3" />
-                                </motion.a>
+                                </a>
                               ))}
                             </div>
                           )}
                         </div>
                       </div>
-                    </motion.div>
+                    </div>
                   );
                 })}
               </div>
-            </motion.div>
+            </div>
           )}
 
           {/* Recommended Training */}
           {analysis.recommended_puzzles.length > 0 && (
-            <motion.div variants={stagger.item} className="bg-card border border-border rounded-lg p-5">
+            <div className="bg-card border border-border rounded-lg p-5">
               <h4 className="text-xs uppercase tracking-[0.15em] text-muted-foreground mb-3 flex items-center gap-2">
                 <Puzzle className="h-3.5 w-3.5" /> Recommended Training
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {analysis.recommended_puzzles.map((p, i) => (
-                  <motion.a
+                  <a
                     key={i}
-                    initial={{ opacity: 0, y: 15 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 + i * 0.08 }}
-                    whileHover={{ y: -3, scale: 1.02, transition: { duration: 0.15 } }}
                     href={`https://lichess.org/training/${p.theme}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group bg-card border border-border rounded-lg p-4 hover:border-foreground/20 transition-all"
+                    className="group bg-card border border-border rounded-lg p-4 hover:border-foreground/20 transition-all card-hover"
                   >
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-display italic text-foreground">{p.label}</span>
                       <ExternalLink className="h-3.5 w-3.5 text-muted-foreground group-hover:text-foreground transition-colors" />
                     </div>
                     <p className="text-xs text-muted-foreground leading-relaxed">{p.reason}</p>
-                  </motion.a>
+                  </a>
                 ))}
               </div>
-            </motion.div>
+            </div>
           )}
-        </motion.div>
+        </>
       )}
-    </motion.div>
+    </div>
   );
 };
 

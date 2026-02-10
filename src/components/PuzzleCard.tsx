@@ -1,13 +1,11 @@
 import { ChessStats } from "@/lib/chess-api";
 import { Lightbulb, Flame, TrendingUp, TrendingDown } from "lucide-react";
-import { motion } from "framer-motion";
 
 interface Props {
   stats: ChessStats;
-  delay?: number;
 }
 
-const PuzzleCard = ({ stats, delay = 3 }: Props) => {
+const PuzzleCard = ({ stats }: Props) => {
   const highestRating = stats.tactics?.highest?.rating;
   const lowestRating = stats.tactics?.lowest?.rating;
   const rushBest = stats.puzzle_rush?.best?.score;
@@ -16,12 +14,9 @@ const PuzzleCard = ({ stats, delay = 3 }: Props) => {
   if (!highestRating && !rushBest) return null;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 40, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.6, delay: delay * 0.1, ease: [0.22, 1, 0.36, 1] }}
-      whileHover={{ y: -4, transition: { duration: 0.2 } }}
-      className="bg-card border border-border rounded-lg p-5 card-hover"
+    <div
+      className="bg-card border border-border rounded-lg p-5 card-hover opacity-0 animate-fade-in"
+      style={{ animationDelay: "300ms" }}
     >
       <div className="flex items-center gap-3 mb-4">
         <div className="p-2 rounded-sm bg-foreground/5 text-foreground/60">
@@ -30,14 +25,7 @@ const PuzzleCard = ({ stats, delay = 3 }: Props) => {
         <div>
           <h3 className="text-xs uppercase tracking-[0.15em] text-muted-foreground">Puzzles</h3>
           {highestRating && (
-            <motion.p
-              initial={{ opacity: 0, scale: 0.5 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: delay * 0.1 + 0.3, type: "spring", stiffness: 200 }}
-              className="text-3xl font-display italic font-light text-foreground"
-            >
-              {highestRating}
-            </motion.p>
+            <p className="text-3xl font-display italic font-light text-foreground">{highestRating}</p>
           )}
         </div>
       </div>
@@ -70,7 +58,7 @@ const PuzzleCard = ({ stats, delay = 3 }: Props) => {
           </div>
         )}
       </div>
-    </motion.div>
+    </div>
   );
 };
 
