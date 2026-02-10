@@ -30,7 +30,7 @@ const RevealSection = ({
   <motion.div
     initial={{ opacity: 0, y: 40, filter: "blur(10px)" }}
     whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-    viewport={{ once: true, margin: "-60px" }}
+    viewport={{ once: false, margin: "-60px" }}
     transition={{ duration: 0.8, delay, ease: [0.25, 0.46, 0.45, 0.94] as const }}
     className={className}
   >
@@ -51,7 +51,7 @@ const RevealItem = ({
   <motion.div
     initial={{ opacity: 0, y: 30, scale: 0.96, filter: "blur(6px)" }}
     whileInView={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
-    viewport={{ once: true, margin: "-40px" }}
+    viewport={{ once: false, margin: "-40px" }}
     transition={{
       duration: 0.6,
       delay: index * 0.06,
@@ -177,7 +177,7 @@ const Index = () => {
                   navigator.clipboard.writeText("0x9F213F387cD443A26c3a48c7B9816A4c067E36DE");
                   import("sonner").then(({ toast }) => toast.success("USDT address copied to clipboard!"));
                 }}
-                className="text-xs tracking-[0.12em] text-muted-foreground hover:text-foreground transition-colors"
+                className="text-xs tracking-[0.12em] text-muted-foreground hover:text-foreground transition-colors font-display italic"
               >
                 Support the Project ♡
               </motion.button>
@@ -248,7 +248,7 @@ const Index = () => {
                       key={name}
                       initial={{ opacity: 0, y: 12 }}
                       whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
+                      viewport={{ once: false }}
                       transition={{ delay: 0.1 + i * 0.06, duration: 0.5 }}
                       whileHover={{ scale: 1.08, borderColor: "hsl(0 0% 30%)" }}
                       whileTap={{ scale: 0.95 }}
@@ -265,7 +265,7 @@ const Index = () => {
               <motion.div
                 initial={{ scaleX: 0 }}
                 whileInView={{ scaleX: 1 }}
-                viewport={{ once: true }}
+                viewport={{ once: false }}
                 transition={{ duration: 1, ease: [0.25, 0.46, 0.45, 0.94] as const }}
                 className="h-px bg-gradient-to-r from-transparent via-border to-transparent max-w-md mx-auto"
               />
@@ -304,7 +304,7 @@ const Index = () => {
               <motion.div
                 initial={{ scaleX: 0 }}
                 whileInView={{ scaleX: 1 }}
-                viewport={{ once: true }}
+                viewport={{ once: false }}
                 transition={{ duration: 1, ease: [0.25, 0.46, 0.45, 0.94] as const }}
                 className="h-px bg-gradient-to-r from-transparent via-border to-transparent max-w-md mx-auto"
               />
@@ -348,7 +348,7 @@ const Index = () => {
               <motion.div
                 initial={{ scaleX: 0 }}
                 whileInView={{ scaleX: 1 }}
-                viewport={{ once: true }}
+                viewport={{ once: false }}
                 transition={{ duration: 1, ease: [0.25, 0.46, 0.45, 0.94] as const }}
                 className="h-px bg-gradient-to-r from-transparent via-border to-transparent max-w-md mx-auto"
               />
@@ -373,7 +373,7 @@ const Index = () => {
                       key={t}
                       initial={{ opacity: 0, scale: 0.9 }}
                       whileInView={{ opacity: 1, scale: 1 }}
-                      viewport={{ once: true }}
+                      viewport={{ once: false }}
                       transition={{ delay: i * 0.08, duration: 0.4 }}
                       className="px-3.5 py-1.5 rounded-lg border border-border/40 bg-card/20 text-xs text-muted-foreground font-mono hover:border-foreground/20 hover:text-foreground transition-colors"
                     >
