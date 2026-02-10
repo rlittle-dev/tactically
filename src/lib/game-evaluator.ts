@@ -151,14 +151,13 @@ export async function evaluateGame(
     
     const cpLoss = playerBefore - playerAfter;
     
-    // If the move maintained or improved position
-    if (cpLoss <= 3) return 100;    // ≤3cp = engine-level
-    if (cpLoss <= 10) return 93;    // ~0.1 pawn = excellent
-    if (cpLoss <= 20) return 83;    // ~0.2 pawns = good
+    // Only near-engine moves get high scores
+    if (cpLoss <= 2) return 100;
+    if (cpLoss <= 8) return 90;
+    if (cpLoss <= 15) return 78;
     
-    // Balanced exponential decay
-    // 30cp → 72, 50cp → 52, 75cp → 33, 100cp → 20, 150cp → 7, 200cp → 2
-    const raw = 103.1668 * Math.exp(-0.011 * cpLoss) - 3.1669;
+    // Steeper decay: 25cp → 63, 50cp → 38, 75cp → 21, 100cp → 11, 150cp → 3
+    const raw = 103.1668 * Math.exp(-0.014 * cpLoss) - 3.1669;
     return Math.max(0, Math.min(100, raw));
   };
 
