@@ -260,7 +260,7 @@ const GameAnalysisModal = (props: Props) => {
           body.engineAnalysis = {
             summary: evalResult.summary,
             accuracy: evalResult.accuracy,
-            depth: 14,
+            depth: 10,
           };
         }
 
