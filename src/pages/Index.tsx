@@ -28,8 +28,8 @@ const RevealSection = ({
   delay?: number;
 }) => {
   const variants = {
-    hidden: { opacity: 0, y: 40, filter: "blur(10px)" },
-    visible: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.8, delay, ease: [0.25, 0.46, 0.45, 0.94] as const } },
+    hidden: { opacity: 0, y: 40 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.7, delay, ease: [0.25, 0.46, 0.45, 0.94] as const } },
   };
   return (
     <motion.div
@@ -55,8 +55,8 @@ const RevealItem = ({
   index?: number;
 }) => {
   const variants = {
-    hidden: { opacity: 0, y: 30, scale: 0.96, filter: "blur(6px)" },
-    visible: { opacity: 1, y: 0, scale: 1, filter: "blur(0px)", transition: { duration: 0.6, delay: index * 0.06, ease: [0.25, 0.46, 0.45, 0.94] as const } },
+    hidden: { opacity: 0, y: 24, scale: 0.96 },
+    visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.5, delay: index * 0.06, ease: [0.25, 0.46, 0.45, 0.94] as const } },
   };
   return (
     <motion.div
@@ -201,9 +201,9 @@ const Index = () => {
             <motion.div
               key="hero"
               style={{ opacity: heroOpacity, scale: heroScale, y: heroY }}
-              initial={{ opacity: 0, y: 30, filter: "blur(12px)" }}
-              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-              exit={{ opacity: 0, y: -20, filter: "blur(8px)" }}
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
               className="text-center mb-14 space-y-6"
             >
