@@ -126,7 +126,7 @@ const Index = () => {
             </div>
 
             {/* Insights */}
-            <InsightsPanel stats={stats} />
+            <InsightsPanel stats={stats} games={games} username={username} />
           </div>
         )}
       </main>

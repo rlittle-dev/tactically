@@ -31,6 +31,7 @@ export interface RecentGame {
   black: GamePlayer;
   end_time: number;
   time_class: string;
+  pgn?: string;
 }
 
 interface GamePlayer {
