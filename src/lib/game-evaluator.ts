@@ -1,15 +1,10 @@
 /**
  * Evaluates all positions in a PGN using chess-api.com via edge function.
- * Returns evaluations, classifications, and accuracy for each move.
+ * Returns per-move evaluations (scores, best moves) for the eval chart and AI summary.
  */
 
 import { Chess } from "chess.js";
 import { supabase } from "@/integrations/supabase/client";
-
-export interface MoveClassification {
-  type: "blunder" | "mistake" | "inaccuracy" | "good" | "excellent" | "brilliant" | "book";
-  winProbLoss: number;
-}
 
 export interface EvaluatedMove {
   fen: string;
@@ -22,28 +17,12 @@ export interface EvaluatedMove {
   bestMoveSan: string | null;
   depth: number;
   mate: number | null;
-  classification: MoveClassification;
   color: "w" | "b";
 }
 
 export interface GameEvaluation {
   moves: EvaluatedMove[];
-  accuracy: { white: number; black: number };
   summary: string;
-}
-
-/**
- * Classify a move based on Win% loss from the moving player's perspective.
- */
-function classifyMove(winBefore: number, winAfter: number): MoveClassification {
-  const winProbLoss = winBefore - winAfter;
-
-  if (winProbLoss >= 20) return { type: "blunder", winProbLoss };
-  if (winProbLoss >= 10) return { type: "mistake", winProbLoss };
-  if (winProbLoss >= 5) return { type: "inaccuracy", winProbLoss };
-  if (winProbLoss <= -5) return { type: "brilliant", winProbLoss };
-  if (winProbLoss <= -1) return { type: "excellent", winProbLoss };
-  return { type: "good", winProbLoss };
 }
 
 export async function evaluateGame(
@@ -97,26 +76,14 @@ export async function evaluateGame(
     throw new Error(`Failed to evaluate starting position: ${startEval?.error || "no data"}`);
   }
 
-  let prevWinChance: number = startEval.winChance;
   const evaluatedMoves: EvaluatedMove[] = [];
 
   for (let i = 0; i < history.length; i++) {
     const move = history[i];
     const wasWhiteTurn = i % 2 === 0;
-    const evalData = allResults[i + 1]; // +1 because index 0 is starting position
+    const evalData = allResults[i + 1];
 
-    if (!evalData || evalData.error) {
-      // Skip positions that failed to evaluate
-      continue;
-    }
-
-    const currWinChance: number = evalData.winChance;
-
-    // Convert to moving player's perspective for classification
-    const playerWinBefore = wasWhiteTurn ? prevWinChance : 100 - prevWinChance;
-    const playerWinAfter = wasWhiteTurn ? currWinChance : 100 - currWinChance;
-
-    const classification = classifyMove(playerWinBefore, playerWinAfter);
+    if (!evalData || evalData.error) continue;
 
     evaluatedMoves.push({
       fen: positions[i + 1].fen,
@@ -124,98 +91,41 @@ export async function evaluateGame(
       move: move.san,
       san: move.san,
       score: Math.round(evalData.eval * 100),
-      winChance: currWinChance,
+      winChance: evalData.winChance,
       bestMove: evalData.move || null,
       bestMoveSan: evalData.san || null,
       depth: evalData.depth,
       mate: evalData.mate,
-      classification,
       color: wasWhiteTurn ? "w" : "b",
     });
-
-    prevWinChance = currWinChance;
   }
 
-  // ── Accuracy calculation using centipawn loss (position-independent) ──
-  // CP loss doesn't compress at extremes like WP does, so winning/losing
-  // doesn't bias the accuracy score.
-  const allScores = [
-    Math.round(startEval.eval * 100), // convert to centipawns
-    ...evaluatedMoves.map((m) => m.score),
-  ];
+  // Generate summary for AI coaching (eval swings, big drops, etc.)
+  const summaryLines = [`Stockfish 17 NNUE analysis (depth 16):`];
 
-  const moveAccuracy = (cpBefore: number, cpAfter: number, isWhite: boolean): number => {
-    // Convert to moving player's perspective
-    const playerBefore = isWhite ? cpBefore : -cpBefore;
-    const playerAfter = isWhite ? cpAfter : -cpAfter;
-    
-    const cpLoss = playerBefore - playerAfter;
-    
-    // Only near-engine moves get high scores
-    if (cpLoss <= 2) return 100;
-    if (cpLoss <= 8) return 90;
-    if (cpLoss <= 15) return 78;
-    
-    // Steeper decay: 25cp → 63, 50cp → 38, 75cp → 21, 100cp → 11, 150cp → 3
-    const raw = 103.1668 * Math.exp(-0.014 * cpLoss) - 3.1669;
-    return Math.max(0, Math.min(100, raw));
-  };
+  // Find big eval swings (>1 pawn change) to highlight for the AI
+  const prevScores = [Math.round(startEval.eval * 100), ...evaluatedMoves.map((m) => m.score)];
+  const bigSwings: string[] = [];
 
-  const calcGameAccuracy = (color: "w" | "b") => {
-    const isWhite = color === "w";
-    const accs: number[] = [];
+  for (let i = 0; i < evaluatedMoves.length; i++) {
+    const m = evaluatedMoves[i];
+    const cpBefore = m.color === "w" ? prevScores[i] : -prevScores[i];
+    const cpAfter = m.color === "w" ? prevScores[i + 1] : -prevScores[i + 1];
+    const cpLoss = cpBefore - cpAfter;
 
-    for (let i = 0; i < evaluatedMoves.length; i++) {
-      const moveColor = evaluatedMoves[i].color;
-      if (moveColor !== color) continue;
-
-      const scoreIdx = i;
-      accs.push(moveAccuracy(allScores[scoreIdx], allScores[scoreIdx + 1], isWhite));
+    if (cpLoss >= 100) {
+      bigSwings.push(
+        `${m.moveNumber}${m.color === "w" ? "." : "..."} ${m.san} lost ${Math.round(cpLoss / 100 * 10) / 10} pawns` +
+        (m.bestMoveSan ? ` (best was ${m.bestMoveSan})` : "")
+      );
     }
-
-    if (accs.length === 0) return 100;
-    
-    // Weighted arithmetic mean with quadratic penalty
-    // Squares the values so bad moves pull the average down, but not as extreme as harmonic
-    const weightedSum = accs.reduce((sum, a) => sum + Math.pow(a / 100, 2), 0);
-    const weightedAvg = Math.sqrt(weightedSum / accs.length) * 100;
-    
-    return Math.round(Math.max(0, Math.min(100, weightedAvg)));
-  };
-
-  const accuracy = {
-    white: calcGameAccuracy("w"),
-    black: calcGameAccuracy("b"),
-  };
-
-  // Generate summary for AI
-  const blunders = evaluatedMoves.filter((m) => m.classification.type === "blunder");
-  const mistakes = evaluatedMoves.filter((m) => m.classification.type === "mistake");
-  const inaccuracies = evaluatedMoves.filter((m) => m.classification.type === "inaccuracy");
-
-  const summaryLines = [
-    `Stockfish 17 NNUE analysis (chess-api.com):`,
-    `White accuracy: ${accuracy.white}%, Black accuracy: ${accuracy.black}%`,
-    `Blunders: ${blunders.length}, Mistakes: ${mistakes.length}, Inaccuracies: ${inaccuracies.length}`,
-  ];
-
-  if (blunders.length > 0) {
-    summaryLines.push(
-      "Critical blunders: " +
-        blunders
-          .map((b) => `${b.moveNumber}${b.color === "w" ? "." : "..."} ${b.san} (${Math.round(b.classification.winProbLoss)}% WP loss)`)
-          .join(", ")
-    );
   }
 
-  if (mistakes.length > 0) {
-    summaryLines.push(
-      "Mistakes: " +
-        mistakes
-          .map((m) => `${m.moveNumber}${m.color === "w" ? "." : "..."} ${m.san} (${Math.round(m.classification.winProbLoss)}% WP loss)`)
-          .join(", ")
-    );
+  if (bigSwings.length > 0) {
+    summaryLines.push(`Significant errors (≥1 pawn loss): ${bigSwings.join("; ")}`);
+  } else {
+    summaryLines.push("No major blunders detected (no single move lost ≥1 pawn).");
   }
 
-  return { moves: evaluatedMoves, accuracy, summary: summaryLines.join("\n") };
+  return { moves: evaluatedMoves, summary: summaryLines.join("\n") };
 }
