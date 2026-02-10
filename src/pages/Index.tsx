@@ -82,7 +82,7 @@ const Index = () => {
 
       {/* Support Banner */}
       <div className="bg-accent/60 backdrop-blur-sm border-b border-border/50 text-center py-2 px-4 text-xs text-muted-foreground relative z-50">
-        <span>Support this project — USDT (ERC-20): </span>
+        <span>Tactically is completely free — support the project via USDT (ERC-20): </span>
         <button onClick={() => {
         navigator.clipboard.writeText("0x9F213F387cD443A26c3a48c7B9816A4c067E36DE");
         import("sonner").then(({
