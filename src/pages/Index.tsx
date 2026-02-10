@@ -8,6 +8,7 @@ import RatingCard from "@/components/RatingCard";
 import PuzzleCard from "@/components/PuzzleCard";
 import RecentGames from "@/components/RecentGames";
 import RatingChart from "@/components/RatingChart";
+import TopOpenings from "@/components/TopOpenings";
 import InsightsPanel from "@/components/InsightsPanel";
 import PgnUpload from "@/components/PgnUpload";
 import ProfileCardModal from "@/components/ProfileCardModal";
@@ -286,6 +287,8 @@ const Index = () => {
                 <RecentGames games={games} username={username} />
               </div>
             </div>
+
+            <TopOpenings games={games} username={username} />
 
             <InsightsPanel stats={stats} games={games} username={username} />
           </motion.div>}
