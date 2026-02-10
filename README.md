@@ -59,7 +59,7 @@ Visit the in-app [Documentation page](/docs) for detailed information on data so
 
 ## Support
 
-Tactically is completely free. If you'd like to support the project, you can send USDT (ERC-20) to:
+Tactically is completely free :) If you'd like to support the project, you can send USDT (ERC-20) to:
 
 `0x9F213F387cD443A26c3a48c7B9816A4c067E36DE`
 
