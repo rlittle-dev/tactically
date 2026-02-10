@@ -190,7 +190,7 @@ const Index = () => {
               <div className="text-center space-y-3">
                 <p className="text-xs tracking-[0.15em] uppercase text-muted-foreground">Try a sample player</p>
                 <div className="flex flex-wrap justify-center gap-2">
-                  {["hikaru", "GothamChess", "MagnusCarlsen", "DanielNaroditsky"].map((name) => (
+                  {["hikaru", "GothamChess", "MagnusCarlsen", "AnishGiri"].map((name) => (
                     <motion.button
                       key={name}
                       whileHover={{ scale: 1.05 }}
