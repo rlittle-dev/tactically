@@ -30,14 +30,61 @@ serve(async (req) => {
       };
     });
 
-    // Include Stockfish engine data if available
-    const engineContext = engineAnalysis
-      ? `\n\nSTOCKFISH ENGINE ANALYSIS (aggregated across recent games):\n${engineAnalysis}\n\nIMPORTANT: Use the engine data above to identify PATTERNS and TRENDS — do NOT reference specific moves or move numbers. Focus on recurring themes like "frequently loses material in the middlegame" or "struggles with endgame technique" rather than citing individual blunders.`
-      : "";
+    // Build structured engine context from pre-classified mistakes
+    let engineContext = "";
+    if (engineAnalysis?.details?.length > 0) {
+      const mistakeLines = engineAnalysis.details.map((m: any) =>
+        `- Game ${m.game}, ${m.moveNumber}${m.color === "w" ? "." : "..."} ${m.played} [${m.classification.toUpperCase()}, lost ${m.cpLoss}cp, ${m.phase}] → best was ${m.bestMove}`
+      );
+      engineContext = `\n\nSTOCKFISH ENGINE ANALYSIS (depth ${engineAnalysis.depth || 16}, ${engineAnalysis.gamesAnalyzed} games):
+Summary: ${engineAnalysis.blunders} blunders, ${engineAnalysis.mistakes} mistakes, ${engineAnalysis.inaccuracies} inaccuracies
+By phase: Opening ${engineAnalysis.byPhase.opening}, Middlegame ${engineAnalysis.byPhase.middlegame}, Endgame ${engineAnalysis.byPhase.endgame}
+
+Pre-classified errors (use ONLY these — do NOT invent additional ones):
+${mistakeLines.join("\n")}
+
+CRITICAL: Base your weaknesses ONLY on patterns from the errors above. Do NOT hallucinate moves or positions.`;
+    } else if (engineAnalysis) {
+      engineContext = "\n\nStockfish analysis found no significant errors across the analyzed games.";
+    }
+
+    // Determine player's rating tier for ELO-appropriate recommendations
+    const ratings = [
+      stats.chess_rapid?.last?.rating,
+      stats.chess_blitz?.last?.rating,
+      stats.chess_bullet?.last?.rating,
+    ].filter(Boolean) as number[];
+    const avgRating = ratings.length > 0 ? Math.round(ratings.reduce((a: number, b: number) => a + b, 0) / ratings.length) : null;
+    const bestRating = Math.max(...(
+      [stats.chess_rapid?.best?.rating, stats.chess_blitz?.best?.rating, stats.chess_bullet?.best?.rating].filter(Boolean) as number[]
+    ), 0);
+
+    let ratingTier = "intermediate";
+    let ratingContext = "";
+    if (avgRating) {
+      if (avgRating >= 2500 || bestRating >= 2600) {
+        ratingTier = "super_gm";
+        ratingContext = `This player is a SUPER GM level player (~${avgRating}+). Do NOT recommend basic concepts like "opening principles", "piece development", "king safety basics", or "basic tactics". Focus on extremely advanced themes: deep prophylaxis, complex endgame theory, preparation gaps, subtle positional nuances, advanced pawn structure understanding, and sophisticated calculation.`;
+      } else if (avgRating >= 2200) {
+        ratingTier = "master";
+        ratingContext = `This player is MASTER level (~${avgRating}). Do NOT recommend beginner/intermediate concepts. Focus on advanced themes: sophisticated endgame technique, deep calculation, strategic planning, preparation quality, and subtle positional concepts.`;
+      } else if (avgRating >= 1800) {
+        ratingTier = "advanced";
+        ratingContext = `This player is ADVANCED level (~${avgRating}). Recommendations should focus on intermediate-to-advanced concepts: complex tactics, positional understanding, endgame technique, and strategic planning.`;
+      } else if (avgRating >= 1200) {
+        ratingTier = "intermediate";
+        ratingContext = `This player is INTERMEDIATE level (~${avgRating}). Recommendations can include pattern recognition, tactical motifs, basic endgame principles, and opening understanding.`;
+      } else {
+        ratingTier = "beginner";
+        ratingContext = `This player is a BEGINNER (~${avgRating}). Focus on fundamental concepts: piece safety, basic checkmate patterns, simple tactics, and opening principles.`;
+      }
+    }
 
     const prompt = `You are an expert chess coach writing a profile-level overview for a Chess.com player. Focus on BROAD PATTERNS and CONSISTENT TENDENCIES — NOT specific moves or individual game moments.
 
 PLAYER: ${username}
+RATING TIER: ${ratingTier} ${avgRating ? `(avg ~${avgRating}, best ${bestRating})` : ""}
+${ratingContext}
 ${engineContext}
 
 STATS:
@@ -82,6 +129,7 @@ CRITICAL RULES:
 - Focus on patterns like "tends to leave pieces undefended", "strong opening preparation", "struggles to convert winning endgames"
 - Weaknesses and strengths should be trends observable across MULTIPLE games
 - Recommendations should address habitual issues, not one-off mistakes
+- ${ratingContext ? "MOST IMPORTANT: Tailor ALL recommendations to the player's rating tier. " + ratingContext : ""}
 
 For lichess_themes and recommended_puzzles.theme, use valid Lichess training theme slugs like: opening, middlegame, endgame, short, long, mateIn1, mateIn2, mateIn3, fork, pin, skewer, hangingPiece, trappedPiece, discoveredAttack, doubleCheck, sacrifice, deflection, decoy, backRankMate, kingsideAttack, queensideAttack, advancedPawn, quietMove, xRayAttack, interference, exposedKing, attraction, clearance, zugzwang.`;
 
