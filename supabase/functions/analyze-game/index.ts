@@ -27,10 +27,25 @@ serve(async (req) => {
       ? `PLAYER: ${username} (${playerRating})\nOPPONENT: ${opponent} (${opponentRating})\nTIME CONTROL: ${timeClass}\nRESULT: ${result}`
       : "This is an uploaded PGN. Extract player names, ratings, and result from the PGN headers if available.";
 
-    // Include Stockfish engine data if available
-    const engineContext = engineAnalysis
-      ? `\n\nSTOCKFISH ENGINE ANALYSIS (depth ${engineAnalysis.depth || 14}):\n${engineAnalysis.summary}\n\nIMPORTANT: Use the engine evaluation data above to ground your analysis. The centipawn losses identify the actual blunders and mistakes — reference these specific moves and explain WHY they were bad positionally/tactically.`
-      : "";
+    // Build structured engine context from pre-classified mistakes
+    let engineContext = "";
+    if (engineAnalysis?.mistakes?.length > 0) {
+      const mistakeLines = engineAnalysis.mistakes.map((m: any) =>
+        `- ${m.moveNumber}${m.color === "w" ? "." : "..."} ${m.played} [${m.classification.toUpperCase()}, lost ${m.cpLoss}cp] → best was ${m.bestMove} | FEN after: ${m.fen}`
+      );
+      engineContext = `\n\nSTOCKFISH ENGINE ANALYSIS (depth ${engineAnalysis.depth || 16}, ${engineAnalysis.totalMoves} moves analyzed):
+Pre-classified errors (DO NOT invent your own — use ONLY these):
+${mistakeLines.join("\n")}
+
+CRITICAL INSTRUCTIONS:
+- The mistakes above are the ONLY mistakes. Do NOT invent additional ones.
+- Each mistake includes the FEN (board state) AFTER the move was played. Use this to understand the ACTUAL position — do NOT guess or hallucinate the board state.
+- For critical_mistakes in your response, ONLY use moves from the list above.
+- For each mistake, explain WHY the played move was bad and WHY the engine's suggestion was better, based on the FEN position provided.
+- If the engine says castling was best, CHECK the FEN to verify the king hasn't already castled before suggesting it.`;
+    } else if (engineAnalysis) {
+      engineContext = "\n\nStockfish analysis found no significant errors in this game.";
+    }
 
     const prompt = `You are an expert chess coach performing a detailed post-game analysis. Analyze this specific game and provide actionable feedback.
 
@@ -77,7 +92,7 @@ Analyze this game thoroughly and respond with ONLY valid JSON (no markdown, no c
   "opening_name": "Name of the opening played, if identifiable"
 }
 
-Provide 2-3 phases, 1-3 critical mistakes (or empty array if none), 1-3 things done well, and 3-5 practice recommendations. Be specific about move numbers and positions. ${engineAnalysis ? "Base your critical_mistakes on the engine-identified blunders and mistakes above." : ""}`;
+Provide 2-3 phases, 1-3 critical mistakes (ONLY from the engine-identified list above, or empty array if engine found none), 1-3 things done well, and 3-5 practice recommendations. Be specific about move numbers and positions. ${engineAnalysis?.mistakes?.length ? "ONLY use mistakes from the Stockfish list above. Do NOT invent moves or suggest alternatives that contradict the FEN positions." : "Without engine data, provide general observations but note that analysis may be less precise."}`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

@@ -198,11 +198,34 @@ const GameAnalysisModal = (props: Props) => {
           body.opponentRating = getOpponentRating(props.game, props.username);
         }
 
-        // Include engine data for AI to reference
+        // Include structured engine data so the LLM doesn't need to track board state
         if (evalResult) {
+          // Pre-classify mistakes with FENs so the LLM only explains, not finds
+          const classifiedMistakes: any[] = [];
+          for (let i = 1; i < evalResult.moves.length; i++) {
+            const m = evalResult.moves[i];
+            const prev = evalResult.moves[i - 1];
+            const cpBefore = m.color === "w" ? prev.score : -prev.score;
+            const cpAfter = m.color === "w" ? m.score : -m.score;
+            const cpLoss = cpBefore - cpAfter;
+
+            if (cpLoss >= 50) {
+              classifiedMistakes.push({
+                moveNumber: m.moveNumber,
+                color: m.color,
+                played: m.san,
+                bestMove: m.bestMoveSan || "unknown",
+                fen: m.fen,
+                cpLoss: Math.round(cpLoss),
+                classification: cpLoss >= 300 ? "blunder" : cpLoss >= 100 ? "mistake" : "inaccuracy",
+              });
+            }
+          }
+
           body.engineAnalysis = {
-            summary: evalResult.summary,
-            depth: 10,
+            mistakes: classifiedMistakes,
+            totalMoves: evalResult.moves.length,
+            depth: 16,
           };
         }
 
